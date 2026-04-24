@@ -2,13 +2,16 @@ package com.smartcampus.api.service;
 
 import com.smartcampus.api.dto.ResourceRequestDTO;
 import com.smartcampus.api.dto.ResourceResponseDTO;
+import com.smartcampus.api.dto.ResourceStatsDTO;
 import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.model.Resource;
 import com.smartcampus.api.model.enums.ResourceStatus;
 import com.smartcampus.api.model.enums.ResourceType;
 import com.smartcampus.api.repository.ResourceRepository;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
@@ -73,6 +76,24 @@ public class ResourceService {
                 .filter(resource -> status == null || resource.getStatus() == status)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    public ResourceStatsDTO getResourceStats() {
+        long totalResources = resourceRepository.count();
+        long activeResources = resourceRepository.countByStatus(ResourceStatus.ACTIVE);
+        long outOfServiceResources = resourceRepository.countByStatus(ResourceStatus.OUT_OF_SERVICE);
+
+        Map<String, Long> resourcesByType = new LinkedHashMap<>();
+        for (ResourceType type : ResourceType.values()) {
+            resourcesByType.put(type.name(), resourceRepository.countByType(type));
+        }
+
+        return ResourceStatsDTO.builder()
+                .totalResources(totalResources)
+                .activeResources(activeResources)
+                .outOfServiceResources(outOfServiceResources)
+                .resourcesByType(resourcesByType)
+                .build();
     }
 
     private Resource mapToEntity(ResourceRequestDTO requestDTO) {

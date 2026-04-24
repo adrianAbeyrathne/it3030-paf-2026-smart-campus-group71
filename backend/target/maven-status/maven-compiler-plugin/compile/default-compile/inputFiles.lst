@@ -8,6 +8,7 @@ C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\bac
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\dto\NotificationResponseDTO.java
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\dto\ResourceRequestDTO.java
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\dto\ResourceResponseDTO.java
+C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\dto\ResourceStatsDTO.java
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\exception\GlobalExceptionHandler.java
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\exception\ResourceNotFoundException.java
 C:\Users\User\OneDrive\Documents\GitHub\it3030-paf-2026-smart-campus-group71\backend\src\main\java\com\smartcampus\api\model\BaseDocument.java

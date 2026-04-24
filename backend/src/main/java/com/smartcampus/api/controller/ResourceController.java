@@ -3,6 +3,7 @@ package com.smartcampus.api.controller;
 import com.smartcampus.api.dto.ApiResponse;
 import com.smartcampus.api.dto.ResourceRequestDTO;
 import com.smartcampus.api.dto.ResourceResponseDTO;
+import com.smartcampus.api.dto.ResourceStatsDTO;
 import com.smartcampus.api.model.enums.ResourceStatus;
 import com.smartcampus.api.model.enums.ResourceType;
 import com.smartcampus.api.service.ResourceService;
@@ -81,6 +82,13 @@ public class ResourceController {
             @RequestParam(required = false) ResourceStatus status) {
         List<ResourceResponseDTO> resources = resourceService.searchResources(type, capacity, location, status);
         ApiResponse<List<ResourceResponseDTO>> response = new ApiResponse<>(true, "Resources search completed", resources);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<ResourceStatsDTO>> getResourceStats() {
+        ResourceStatsDTO stats = resourceService.getResourceStats();
+        ApiResponse<ResourceStatsDTO> response = new ApiResponse<>(true, "Statistics retrieved", stats);
         return ResponseEntity.ok(response);
     }
 }

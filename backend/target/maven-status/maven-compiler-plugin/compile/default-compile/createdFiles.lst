@@ -4,6 +4,7 @@ com\smartcampus\api\config\MongoConfig$LocalDateTimeToDateConverter.class
 com\smartcampus\api\model\User.class
 com\smartcampus\api\dto\ResourceRequestDTO$ResourceRequestDTOBuilder.class
 com\smartcampus\api\model\Notification.class
+com\smartcampus\api\dto\ResourceStatsDTO$ResourceStatsDTOBuilder.class
 com\smartcampus\api\dto\ResourceRequestDTO.class
 com\smartcampus\api\dto\NotificationResponseDTO$NotificationResponseDTOBuilder.class
 com\smartcampus\api\model\User$UserBuilder.class
@@ -13,6 +14,7 @@ com\smartcampus\api\model\BaseDocument.class
 com\smartcampus\api\dto\NotificationRequestDTO$NotificationRequestDTOBuilder.class
 com\smartcampus\api\dto\NotificationRequestDTO.class
 com\smartcampus\api\model\Resource.class
+com\smartcampus\api\dto\ResourceStatsDTO.class
 com\smartcampus\api\repository\NotificationRepository.class
 com\smartcampus\api\config\MongoConfig.class
 com\smartcampus\api\model\enums\UserRole.class
