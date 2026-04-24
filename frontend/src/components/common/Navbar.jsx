@@ -30,7 +30,7 @@ function LogoutIcon() {
 }
 
 function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, switchUser, isAdmin } = useAuth();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -60,9 +60,11 @@ function Navbar() {
             Smart Campus
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
-            <NavLink to="/dashboard" className={navLinkClass}>
-              Dashboard
-            </NavLink>
+            {isAdmin() && (
+              <NavLink to="/dashboard" className={navLinkClass}>
+                Dashboard
+              </NavLink>
+            )}
             <NavLink to="/resources" className={navLinkClass}>
               Resources
             </NavLink>
@@ -89,6 +91,14 @@ function Navbar() {
 
           <button
             type="button"
+            onClick={switchUser}
+            className="rounded-md border border-white/30 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
+          >
+            Switch User ({isAdmin() ? 'ADMIN' : 'USER'})
+          </button>
+
+          <button
+            type="button"
             onClick={handleLogout}
             className="rounded-full p-2 text-slate-100 transition hover:bg-white/10"
             aria-label="Logout"
@@ -98,9 +108,11 @@ function Navbar() {
         </div>
 
         <nav className="flex w-full items-center gap-2 md:hidden">
-          <NavLink to="/dashboard" className={navLinkClass}>
-            Dashboard
-          </NavLink>
+          {isAdmin() && (
+            <NavLink to="/dashboard" className={navLinkClass}>
+              Dashboard
+            </NavLink>
+          )}
           <NavLink to="/resources" className={navLinkClass}>
             Resources
           </NavLink>

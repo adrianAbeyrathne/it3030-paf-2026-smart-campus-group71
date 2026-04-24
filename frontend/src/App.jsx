@@ -1,13 +1,22 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
-import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import ResourceListPage from './pages/resources/ResourceListPage';
 import ResourceDetailPage from './pages/resources/ResourceDetailPage';
 import ResourceFormPage from './pages/resources/ResourceFormPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+function AdminRoute({ children }) {
+  const { isAdmin } = useAuth();
+
+  if (!isAdmin()) {
+    return <Navigate to="/resources" replace />;
+  }
+
+  return children;
+}
 
 function AppLayout() {
   return (
@@ -26,8 +35,15 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/" element={<Navigate to="/resources" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <AdminRoute>
+                <DashboardPage />
+              </AdminRoute>
+            }
+          />
           <Route path="/resources" element={<ResourceListPage />} />
           <Route path="/resources/new" element={<ResourceFormPage />} />
           <Route path="/resources/:id" element={<ResourceDetailPage />} />

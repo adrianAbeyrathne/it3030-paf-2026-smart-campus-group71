@@ -1,6 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 
 const toLabel = (value) => value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+const emptyWindow = { fromDate: '', fromTime: '', toDate: '', toTime: '' };
+
+const parseAvailabilityWindow = (value) => {
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2})\s-\s(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2})$/);
+
+  if (!match) return null;
+
+  return {
+    fromDate: match[1],
+    fromTime: match[2],
+    toDate: match[3],
+    toTime: match[4]
+  };
+};
+
+const isWindowEmpty = (window) => !window.fromDate && !window.fromTime && !window.toDate && !window.toTime;
+const isWindowComplete = (window) => window.fromDate && window.fromTime && window.toDate && window.toTime;
+
+const formatAvailabilityWindow = (window) => `${window.fromDate} ${window.fromTime} - ${window.toDate} ${window.toTime}`;
 
 const emptyForm = {
   name: '',
@@ -9,7 +28,7 @@ const emptyForm = {
   location: '',
   description: '',
   status: '',
-  availabilityWindows: ['']
+  availabilityWindows: [{ ...emptyWindow }]
 };
 
 function ResourceForm({
@@ -32,17 +51,17 @@ function ResourceForm({
         location: initialValues.location || '',
         description: initialValues.description || '',
         status: initialValues.status || '',
-        availabilityWindows:
-          initialValues.availabilityWindows && initialValues.availabilityWindows.length > 0
-            ? initialValues.availabilityWindows
-            : ['']
+        availabilityWindows: (() => {
+          const parsed = (initialValues.availabilityWindows || []).map(parseAvailabilityWindow).filter(Boolean);
+          return parsed.length > 0 ? parsed : [{ ...emptyWindow }];
+        })()
       });
       setErrors({});
     }
   }, [initialValues]);
 
   const hasAvailabilityEntries = useMemo(
-    () => values.availabilityWindows.some((entry) => entry.trim() !== ''),
+    () => values.availabilityWindows.some((window) => isWindowComplete(window)),
     [values.availabilityWindows]
   );
 
@@ -50,22 +69,22 @@ function ResourceForm({
     setValues((prev) => ({ ...prev, [field]: value }));
   };
 
-  const setAvailability = (index, value) => {
+  const setAvailability = (index, field, value) => {
     setValues((prev) => {
       const next = [...prev.availabilityWindows];
-      next[index] = value;
+      next[index] = { ...next[index], [field]: value };
       return { ...prev, availabilityWindows: next };
     });
   };
 
   const addAvailability = () => {
-    setValues((prev) => ({ ...prev, availabilityWindows: [...prev.availabilityWindows, ''] }));
+    setValues((prev) => ({ ...prev, availabilityWindows: [...prev.availabilityWindows, { ...emptyWindow }] }));
   };
 
   const removeAvailability = (index) => {
     setValues((prev) => {
       const next = prev.availabilityWindows.filter((_, idx) => idx !== index);
-      return { ...prev, availabilityWindows: next.length ? next : [''] };
+      return { ...prev, availabilityWindows: next.length ? next : [{ ...emptyWindow }] };
     });
   };
 
@@ -84,7 +103,22 @@ function ResourceForm({
       nextErrors.capacity = 'Capacity must be greater than 0';
     }
 
-    if (!hasAvailabilityEntries) {
+    const hasPartialWindow = values.availabilityWindows.some((window) => !isWindowEmpty(window) && !isWindowComplete(window));
+    if (hasPartialWindow) {
+      nextErrors.availabilityWindows = 'Complete all date and time fields for each availability window';
+    }
+
+    const hasInvalidRange = values.availabilityWindows.some((window) => {
+      if (!isWindowComplete(window)) return false;
+      const start = new Date(`${window.fromDate}T${window.fromTime}`);
+      const end = new Date(`${window.toDate}T${window.toTime}`);
+      return end < start;
+    });
+    if (hasInvalidRange) {
+      nextErrors.availabilityWindows = 'End date/time must be after start date/time';
+    }
+
+    if (!hasAvailabilityEntries && !nextErrors.availabilityWindows) {
       nextErrors.availabilityWindows = 'At least one availability window is required';
     }
 
@@ -103,7 +137,9 @@ function ResourceForm({
       location: values.location.trim(),
       description: values.description.trim(),
       status: values.status,
-      availabilityWindows: values.availabilityWindows.map((value) => value.trim()).filter(Boolean)
+      availabilityWindows: values.availabilityWindows
+        .filter((window) => isWindowComplete(window))
+        .map(formatAvailabilityWindow)
     });
   };
 
@@ -206,17 +242,47 @@ function ResourceForm({
 
         <div className="space-y-2">
           {values.availabilityWindows.map((window, index) => (
-            <div key={`${window}-${index}`} className="flex items-center gap-2">
-              <input
-                value={window}
-                onChange={(event) => setAvailability(index, event.target.value)}
-                placeholder="e.g. Mon-Fri 08:00 - 16:00"
-                className={inputClass}
-              />
+            <div key={index} className="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">From Date</label>
+                <input
+                  type="date"
+                  value={window.fromDate}
+                  onChange={(event) => setAvailability(index, 'fromDate', event.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">From Time</label>
+                <input
+                  type="time"
+                  value={window.fromTime}
+                  onChange={(event) => setAvailability(index, 'fromTime', event.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">To Date</label>
+                <input
+                  type="date"
+                  value={window.toDate}
+                  onChange={(event) => setAvailability(index, 'toDate', event.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">To Time</label>
+                <input
+                  type="time"
+                  value={window.toTime}
+                  onChange={(event) => setAvailability(index, 'toTime', event.target.value)}
+                  className={inputClass}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => removeAvailability(index)}
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+                className="h-fit rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 lg:mt-6"
               >
                 Remove
               </button>

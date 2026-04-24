@@ -23,6 +23,11 @@ const formatLabel = (value) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+const statusStyles = {
+  ACTIVE: 'bg-[#10B981]/15 text-[#047857] border-[#10B981]/30',
+  OUT_OF_SERVICE: 'bg-[#EF4444]/15 text-[#B91C1C] border-[#EF4444]/30'
+};
+
 function DashboardIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -147,7 +152,15 @@ function DashboardPage() {
                     <td className="px-3 py-2 font-medium text-slate-800">{resource.name}</td>
                     <td className="px-3 py-2 text-slate-600">{formatLabel(resource.type)}</td>
                     <td className="px-3 py-2 text-slate-600">{resource.location}</td>
-                    <td className="px-3 py-2 text-slate-600">{formatLabel(resource.status)}</td>
+                    <td className="px-3 py-2">
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
+                          statusStyles[resource.status] || 'border-slate-300 bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {formatLabel(resource.status)}
+                      </span>
+                    </td>
                   </tr>
                 ))
               ) : (

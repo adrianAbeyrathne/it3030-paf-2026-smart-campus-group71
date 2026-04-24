@@ -6,6 +6,7 @@ const statusStyles = {
 };
 
 function ResourceCard({ resource }) {
+
   return (
     <article className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
@@ -26,16 +27,19 @@ function ResourceCard({ resource }) {
         </div>
       </dl>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[resource.status] || 'bg-slate-200 text-slate-700'}`}>
           {resource.statusLabel}
         </span>
-        <Link
-          to={`/resources/${resource.id}`}
-          className="rounded-md bg-[#1E3A5F] px-3 py-2 text-sm font-medium text-white transition hover:brightness-110"
-        >
-          View Details
-        </Link>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={`/resources/${resource.id}`}
+            className="rounded-md bg-[#1E3A5F] px-3.5 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </article>
   );

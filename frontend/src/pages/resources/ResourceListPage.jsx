@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import ResourceCard from '../../components/resources/ResourceCard';
 import ResourceFilter from '../../components/resources/ResourceFilter';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useAuth } from '../../context/AuthContext';
 import resourceService from '../../services/resourceService';
 
 const TYPE_OPTIONS = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
@@ -24,6 +25,7 @@ const defaultFilters = {
 };
 
 function ResourceListPage() {
+  const { isAdmin } = useAuth();
   const [filters, setFilters] = useState(defaultFilters);
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,12 +70,14 @@ function ResourceListPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Facilities & Assets</h1>
-        <Link
-          to="/resources/new"
-          className="rounded-md bg-[#10B981] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
-        >
-          + Add Resource
-        </Link>
+        {isAdmin() && (
+          <Link
+            to="/resources/new"
+            className="rounded-md bg-[#10B981] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+          >
+            + Add Resource
+          </Link>
+        )}
       </div>
 
       <ResourceFilter

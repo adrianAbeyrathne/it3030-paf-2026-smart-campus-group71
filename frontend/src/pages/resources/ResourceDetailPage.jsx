@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useAuth } from '../../context/AuthContext';
 import resourceService from '../../services/resourceService';
 
 const formatLabel = (value) =>
@@ -18,6 +19,7 @@ const statusStyles = {
 };
 
 function ResourceDetailPage() {
+  const { isAdmin } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -114,33 +116,37 @@ function ResourceDetailPage() {
             </div>
           </div>
 
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              to={`/resources/${resource.id}/edit`}
-              className="rounded-md bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
-            >
-              Edit Resource
-            </Link>
-            <button
-              type="button"
-              onClick={() => setDeleteDialogOpen(true)}
-              className="rounded-md bg-[#EF4444] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
-            >
-              Delete
-            </button>
-          </div>
+          {isAdmin() && (
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                to={`/resources/${resource.id}/edit`}
+                className="rounded-md bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+              >
+                Edit Resource
+              </Link>
+              <button
+                type="button"
+                onClick={() => setDeleteDialogOpen(true)}
+                className="rounded-md bg-[#EF4444] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </section>
       </div>
 
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        title="Delete Resource"
-        message="This action cannot be undone. Are you sure you want to delete this resource?"
-        confirmText="Delete Resource"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteDialogOpen(false)}
-        isLoading={isDeleting}
-      />
+      {isAdmin() && (
+        <ConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          title="Delete Resource"
+          message="This action cannot be undone. Are you sure you want to delete this resource?"
+          confirmText="Delete Resource"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
+          isLoading={isDeleting}
+        />
+      )}
     </>
   );
 }

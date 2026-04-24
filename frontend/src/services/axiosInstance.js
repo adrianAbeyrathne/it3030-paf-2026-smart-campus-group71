@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8090',
+  baseURL: 'http://localhost:8091',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -18,6 +18,17 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem('token');
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;
