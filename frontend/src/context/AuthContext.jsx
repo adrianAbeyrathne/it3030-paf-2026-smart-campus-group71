@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext(null);
 const ROLE_STORAGE_KEY = 'smart-campus-role';
@@ -32,19 +32,16 @@ export function AuthProvider({ children }) {
     localStorage.setItem(ROLE_STORAGE_KEY, user?.role || 'ADMIN');
   }, [user]);
 
-  const value = useMemo(
-    () => ({
-      user,
-      adminUser,
-      normalUser,
-      isAuthenticated: true,
-      isAdmin,
-      canManageResources,
-      switchUser,
-      logout: () => {}
-    }),
-    [user]
-  );
+  const value = {
+    user,
+    adminUser,
+    normalUser,
+    isAuthenticated: true,
+    isAdmin,
+    canManageResources,
+    switchUser,
+    logout: () => {}
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
