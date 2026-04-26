@@ -1,13 +1,12 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import LoadingSpinner from './LoadingSpinner';
 
 /**
  * A wrapper component to protect routes based on authentication and roles.
  * Usage: <ProtectedRoute roles={['ADMIN', 'TECHNICIAN']}> <MyPage /> </ProtectedRoute>
  */
 export default function ProtectedRoute({ children, roles }) {
-  const { user, isAuthenticated, hasRole } = useAuth();
+  const { isAuthenticated, hasRole } = useAuth();
   const location = useLocation();
 
   // If we are still "loading" (e.g. checking token), we could show a spinner
