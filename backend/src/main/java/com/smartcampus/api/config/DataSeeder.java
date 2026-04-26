@@ -11,45 +11,100 @@ import com.smartcampus.api.model.enums.UserRole;
 import com.smartcampus.api.repository.NotificationRepository;
 import com.smartcampus.api.repository.ResourceRepository;
 import com.smartcampus.api.repository.UserRepository;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class DataSeeder implements ApplicationRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(DataSeeder.class);
+
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationRepository notificationRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
-    public DataSeeder(
-            UserRepository userRepository,
-            ResourceRepository resourceRepository,
-            NotificationRepository notificationRepository) {
+    public DataSeeder(UserRepository userRepository,
+                      ResourceRepository resourceRepository,
+                      NotificationRepository notificationRepository,
+                      org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+                      Environment environment) {
         this.userRepository = userRepository;
         this.resourceRepository = resourceRepository;
         this.notificationRepository = notificationRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.environment = environment;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        seedAdminUser();
-        seedResources();
-        seedNotifications();
+        String mongoUri = environment.getProperty("spring.data.mongodb.uri", "");
+        if (mongoUri.contains("DB_USERNAME") || mongoUri.contains("DB_PASSWORD")) {
+            logger.warn("Skipping data seeding because MongoDB credentials are placeholders.");
+            return;
+        }
+
+        try {
+            seedUsers();
+            seedResources();
+            seedNotifications();
+        } catch (Exception ex) {
+            logger.warn("Skipping data seeding due to MongoDB connectivity/auth issue: {}", ex.getMessage());
+        }
     }
 
-    private void seedAdminUser() {
-        userRepository.findByEmail("admin@sliit.lk").orElseGet(() -> userRepository.save(User.builder()
-                .email("admin@sliit.lk")
-                .name("Admin User")
-                .role(UserRole.ADMIN)
-                .provider(AuthProvider.LOCAL)
-                .password(null)
-                .profilePicture(null)
-                .build()));
+    // ── Users ──────────────────────────────────────────────────────
+    private void seedUsers() {
+        // Head Admin user (Email/Password Login)
+        userRepository.findByEmail("campus.head@sliit.lk").orElseGet(() ->
+                userRepository.save(User.builder()
+                        .email("campus.head@sliit.lk")
+                        .name("Campus Head Admin")
+                        .password(passwordEncoder.encode("Admin@123"))
+                        .role(UserRole.ADMIN)
+                        .provider(AuthProvider.LOCAL)
+                        .build()));
+
+        // Admin user (legacy)
+        User admin = userRepository.findByEmail("admin@sliit.lk").orElseGet(() ->
+                userRepository.save(User.builder()
+                        .email("admin@sliit.lk")
+                        .name("Admin User")
+                        .password(passwordEncoder.encode("admin123"))
+                        .role(UserRole.ADMIN)
+                        .provider(AuthProvider.LOCAL)
+                        .build()));
+        logger.info("Head Admin account ready: campus.head@sliit.lk");
+
+        // Demo regular user (simulates a Google-signed-in student)
+        userRepository.findByEmail("student@sliit.lk").orElseGet(() ->
+                userRepository.save(User.builder()
+                        .email("student@sliit.lk")
+                        .name("John Student")
+                        .role(UserRole.USER)
+                        .provider(AuthProvider.GOOGLE)
+                        .build()));
+
+        // Demo technician
+        userRepository.findByEmail("tech@sliit.lk").orElseGet(() ->
+                userRepository.save(User.builder()
+                        .email("tech@sliit.lk")
+                        .name("Jane Technician")
+                        .role(UserRole.TECHNICIAN)
+                        .provider(AuthProvider.GOOGLE)
+                        .build()));
+
+        logger.info("Demo users seeded.");
     }
 
+    // ── Resources ─────────────────────────────────────────────────
     private void seedResources() {
         if (resourceRepository.count() > 0) {
             return;
@@ -103,8 +158,10 @@ public class DataSeeder implements ApplicationRunner {
                         .build());
 
         resourceRepository.saveAll(resources);
+        logger.info("Resources seeded: {} resources", resources.size());
     }
 
+    // ── Notifications ─────────────────────────────────────────────
     private void seedNotifications() {
         if (!notificationRepository.findByUserIdOrderByCreatedAtDesc("user123").isEmpty()) {
             return;
@@ -137,5 +194,6 @@ public class DataSeeder implements ApplicationRunner {
                         .build());
 
         notificationRepository.saveAll(notifications);
+        logger.info("Notifications seeded.");
     }
 }
