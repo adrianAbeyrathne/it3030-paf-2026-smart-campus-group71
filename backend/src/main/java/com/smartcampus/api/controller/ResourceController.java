@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ public class ResourceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
     public ResponseEntity<ApiResponse<ResourceResponseDTO>> createResource(@Valid @RequestBody ResourceRequestDTO requestDTO) {
         ResourceResponseDTO createdResource = resourceService.createResource(requestDTO);
         ApiResponse<ResourceResponseDTO> response = new ApiResponse<>(true, "Resource created successfully", createdResource);
@@ -61,6 +63,7 @@ public class ResourceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
     public ResponseEntity<ApiResponse<ResourceResponseDTO>> updateResource(
             @PathVariable String id, @Valid @RequestBody ResourceRequestDTO requestDTO) {
         ResourceResponseDTO updatedResource = resourceService.updateResource(id, requestDTO);
@@ -69,6 +72,7 @@ public class ResourceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteResource(@PathVariable String id) {
         resourceService.deleteResource(id);
         return ResponseEntity.noContent().build();

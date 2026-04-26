@@ -1,57 +1,75 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
-const ROLE_STORAGE_KEY = 'smart-campus-role';
+const TOKEN_KEY = 'smart-campus-token';
+
+function parseToken(token) {
+  try {
+    const decoded = jwtDecode(token);
+    // Check expiry
+    if (decoded.exp * 1000 < Date.now()) {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return {
+      id: decoded.sub,
+      email: decoded.email,
+      name: decoded.name,
+      role: decoded.role,
+      picture: decoded.picture
+    };
+  } catch {
+    localStorage.removeItem(TOKEN_KEY);
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
-  const adminUser = {
-    name: 'Dr. Smith',
-    role: 'ADMIN',
-    email: 'admin@sliit.lk'
-  };
-
-  const normalUser = {
-    name: 'John Student',
-    role: 'USER',
-    email: 'student@sliit.lk'
-  };
-
   const [user, setUser] = useState(() => {
-    const savedRole = localStorage.getItem(ROLE_STORAGE_KEY);
-    return savedRole === 'USER' ? normalUser : adminUser;
+    const token = localStorage.getItem(TOKEN_KEY);
+    return token ? parseToken(token) : null;
   });
 
-  const isAdmin = () => user?.role === 'ADMIN';
+  const login = useCallback((token) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    setUser(parseToken(token));
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    setUser(null);
+    // Sign out from Google too
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+  }, []);
+
+  const isAdmin       = () => user?.role === 'ADMIN';
+  const isTechnician  = () => user?.role === 'TECHNICIAN';
+  const isUser        = () => user?.role === 'USER';
+  const hasRole       = (role) => user?.role === role;
   const canManageResources = () => isAdmin();
-
-  const switchUser = () => {
-    setUser((prevUser) => (prevUser?.role === 'ADMIN' ? normalUser : adminUser));
-  };
-
-  useEffect(() => {
-    localStorage.setItem(ROLE_STORAGE_KEY, user?.role || 'ADMIN');
-  }, [user]);
 
   const value = {
     user,
-    adminUser,
-    normalUser,
-    isAuthenticated: true,
+    login,
+    logout,
     isAdmin,
+    isTechnician,
+    isUser,
+    hasRole,
     canManageResources,
-    switchUser,
-    logout: () => {}
+    isAuthenticated: !!user
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
 
 export default AuthContext;
