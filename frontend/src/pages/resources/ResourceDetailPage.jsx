@@ -14,12 +14,14 @@ const formatLabel = (value) =>
     .join(' ');
 
 const statusStyles = {
-  ACTIVE: 'bg-[#10B981]/15 text-[#047857]',
-  OUT_OF_SERVICE: 'bg-[#EF4444]/15 text-[#B91C1C]'
+  ACTIVE: 'bg-[#10B981]/15 text-[#047857]', // Occupied
+  NOT_ACTIVE: 'bg-blue-50 text-blue-600 border-blue-100', // Available
+  OUT_OF_SERVICE: 'bg-rose-50 text-rose-600 border-rose-100' // Under maintenance
 };
 
 function ResourceDetailPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const isTeacher = user?.role === 'TEACHER';
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -131,6 +133,28 @@ function ResourceDetailPage() {
               >
                 Delete
               </button>
+            </div>
+          )}
+
+          {isTeacher && resource.status === 'NOT_ACTIVE' && (
+            <div className="mt-7">
+              <Link
+                to="/bookings"
+                state={{ preselectedResourceId: resource.id, preselectedResourceName: resource.name }}
+                className="inline-block rounded-xl bg-[#1E3A5F] px-8 py-3 text-sm font-bold text-white shadow-lg transition hover:scale-[1.02] active:scale-100"
+              >
+                Request this Classroom
+              </Link>
+            </div>
+          )}
+          
+          {isTeacher && resource.status !== 'NOT_ACTIVE' && (
+            <div className="mt-7 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-sm font-bold text-slate-500 italic">
+                {resource.status === 'ACTIVE' 
+                  ? 'This classroom is currently occupied by another activity.' 
+                  : 'This facility is currently out of service for maintenance.'}
+              </p>
             </div>
           )}
         </section>

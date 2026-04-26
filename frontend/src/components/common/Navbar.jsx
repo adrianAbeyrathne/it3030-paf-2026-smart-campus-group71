@@ -47,6 +47,8 @@ function Navbar() {
     };
 
     fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
   }, [location.pathname, user]);
 
   const handleLogout = () => {
@@ -75,9 +77,11 @@ function Navbar() {
             <NavLink to="/resources" className={navLinkClass}>
               Resources
             </NavLink>
-            <NavLink to="/bookings" className={navLinkClass}>
-              Bookings
-            </NavLink>
+            {(isAdmin() || user?.role === 'TEACHER') && (
+              <NavLink to="/bookings" className={navLinkClass}>
+                Bookings
+              </NavLink>
+            )}
             <NavLink to="/notifications" className={navLinkClass}>
               Notifications
             </NavLink>
@@ -131,9 +135,11 @@ function Navbar() {
           <NavLink to="/resources" className={navLinkClass}>
             Resources
           </NavLink>
-          <NavLink to="/bookings" className={navLinkClass}>
-            Bookings
-          </NavLink>
+          {(isAdmin() || user?.role === 'TEACHER') && (
+            <NavLink to="/bookings" className={navLinkClass}>
+              Bookings
+            </NavLink>
+          )}
           <NavLink to="/notifications" className={navLinkClass}>
             Alerts
           </NavLink>
