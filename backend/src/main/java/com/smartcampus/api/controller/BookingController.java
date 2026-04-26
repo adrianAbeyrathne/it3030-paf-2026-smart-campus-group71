@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +27,9 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    /** POST /api/bookings – create a booking for the authenticated user */
+    /** POST /api/bookings – create a booking (TEACHER only) */
     @PostMapping
+    @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> createBooking(
             @Valid @RequestBody BookingRequestDTO requestDTO,
             Authentication auth) {
@@ -49,28 +51,42 @@ public class BookingController {
 
     /** GET /api/bookings – all bookings (ADMIN only) */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<BookingResponseDTO>>> getAllBookings(
             @RequestParam(required = false) BookingStatus status,
             Authentication auth) {
-        if (!isAdmin(auth)) {
-            throw new ValidationException("Only ADMIN users can view all bookings");
-        }
         List<BookingResponseDTO> bookings = bookingService.getAllBookings(status);
         return ResponseEntity.ok(new ApiResponse<>(true, "All bookings fetched successfully", bookings));
     }
 
     /** PUT /api/bookings/{id}/review – approve or reject (ADMIN only) */
     @PutMapping("/{id}/review")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> reviewBooking(
             @PathVariable String id,
             @Valid @RequestBody BookingReviewRequestDTO requestDTO,
             Authentication auth) {
-        if (!isAdmin(auth)) {
-            throw new ValidationException("Only ADMIN users can review bookings");
-        }
         String reviewerUserId = resolveUserId(auth);
         BookingResponseDTO booking = bookingService.reviewBooking(id, requestDTO, reviewerUserId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Booking reviewed successfully", booking));
+    }
+
+    /** GET /api/bookings/schedule – get schedule for a date (ADMIN only) */
+    @GetMapping("/schedule")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<BookingResponseDTO>>> getDailySchedule(
+            @RequestParam String date) {
+        List<BookingResponseDTO> schedule = bookingService.getDailySchedule(date);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Daily schedule fetched", schedule));
+    }
+
+    /** GET /api/bookings/resource-schedule – check specific resource availability */
+    @GetMapping("/resource-schedule")
+    public ResponseEntity<ApiResponse<List<BookingResponseDTO>>> getResourceSchedule(
+            @RequestParam String resourceId,
+            @RequestParam String date) {
+        List<BookingResponseDTO> schedule = bookingService.getResourceSchedule(resourceId, date);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Resource schedule fetched", schedule));
     }
 
     /** PUT /api/bookings/{id}/cancel – cancel an approved booking */
