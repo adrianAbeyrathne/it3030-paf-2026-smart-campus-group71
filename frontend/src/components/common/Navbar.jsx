@@ -30,11 +30,13 @@ function LogoutIcon() {
 }
 
 function Navbar() {
-  const { user, logout, switchUser, isAdmin } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    if (!user) return;
+    
     const fetchUnreadCount = async () => {
       try {
         const count = await notificationService.getUnreadCount();
@@ -45,7 +47,7 @@ function Navbar() {
     };
 
     fetchUnreadCount();
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   const handleLogout = () => {
     logout();
@@ -56,14 +58,19 @@ function Navbar() {
     <header className="sticky top-0 z-40 border-b border-white/20 bg-[#1E3A5F] shadow-lg">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link to="/" className="text-lg font-semibold tracking-wide text-white">
-            Smart Campus
+          <Link to="/" className="text-lg font-bold tracking-tight text-white">
+            Smart Campus <span className="font-normal opacity-70 ml-1">SLIIT</span>
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
             {isAdmin() && (
-              <NavLink to="/dashboard" className={navLinkClass}>
-                Dashboard
-              </NavLink>
+              <>
+                <NavLink to="/dashboard" className={navLinkClass}>
+                  Dashboard
+                </NavLink>
+                <NavLink to="/admin/users" className={navLinkClass}>
+                  User Management
+                </NavLink>
+              </>
             )}
             <NavLink to="/resources" className={navLinkClass}>
               Resources
@@ -87,34 +94,39 @@ function Navbar() {
             )}
           </Link>
 
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-medium text-white">{user.name}</p>
-            <p className="text-xs text-slate-200">{user.role}</p>
+          <div className="hidden items-center gap-3 sm:flex">
+            <div className="text-right">
+              <p className="text-sm font-semibold text-white leading-none">{user?.name}</p>
+              <p className="text-[10px] uppercase tracking-wider text-blue-200 mt-1 font-bold">{user?.role}</p>
+            </div>
+            <img 
+              src={user?.picture || `https://ui-avatars.com/api/?name=${user?.name}&background=1E3A5F&color=fff`} 
+              className="h-8 w-8 rounded-full border border-white/20 shadow-sm"
+              alt="Profile"
+            />
           </div>
 
           <button
             type="button"
-            onClick={switchUser}
-            className="rounded-md border border-white/30 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
-          >
-            Switch User ({isAdmin() ? 'ADMIN' : 'USER'})
-          </button>
-
-          <button
-            type="button"
             onClick={handleLogout}
-            className="rounded-full p-2 text-slate-100 transition hover:bg-white/10"
+            className="flex items-center gap-2 rounded-full p-2 text-slate-100 transition hover:bg-white/10"
             aria-label="Logout"
           >
             <LogoutIcon />
           </button>
         </div>
 
-        <nav className="flex w-full items-center gap-2 md:hidden">
+        {/* Mobile Nav */}
+        <nav className="flex w-full items-center gap-1 md:hidden overflow-x-auto pb-1 no-scrollbar">
           {isAdmin() && (
-            <NavLink to="/dashboard" className={navLinkClass}>
-              Dashboard
-            </NavLink>
+            <>
+              <NavLink to="/dashboard" className={navLinkClass}>
+                Dash
+              </NavLink>
+              <NavLink to="/admin/users" className={navLinkClass}>
+                Users
+              </NavLink>
+            </>
           )}
           <NavLink to="/resources" className={navLinkClass}>
             Resources
@@ -123,7 +135,7 @@ function Navbar() {
             Bookings
           </NavLink>
           <NavLink to="/notifications" className={navLinkClass}>
-            Notifications
+            Alerts
           </NavLink>
         </nav>
       </div>

@@ -1,11 +1,10 @@
 package com.smartcampus.api.controller;
 
 import com.smartcampus.api.config.JwtUtil;
-import com.smartcampus.api.dto.ApiResponse;
-import com.smartcampus.api.dto.AuthResponse;
-import com.smartcampus.api.dto.GoogleAuthRequest;
+import com.smartcampus.api.dto.*;
 import com.smartcampus.api.model.User;
 import com.smartcampus.api.service.UserService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +33,48 @@ public class AuthController {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.restTemplate = new RestTemplate();
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Auth Controller is Active!";
+    }
+
+    /**
+     * POST /api/auth/signup
+     */
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<AuthResponse>> signup(@Valid @RequestBody SignupRequest request) {
+        logger.info("Received signup request for email: {}", request.getEmail());
+        try {
+            User user = userService.registerUser(request.getName(), request.getEmail(), request.getPassword());
+            String jwt = jwtUtil.generateToken(user);
+            
+            AuthResponse response = buildAuthResponse(user, jwt);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ApiResponse<>(true, "User registered successfully", response));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    /**
+     * POST /api/auth/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        logger.info("Received login request for email: {}", request.getEmail());
+        try {
+            User user = userService.verifyLocalLogin(request.getEmail(), request.getPassword());
+            String jwt = jwtUtil.generateToken(user);
+            
+            AuthResponse response = buildAuthResponse(user, jwt);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", response));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
     /**
@@ -104,6 +145,17 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>(false, "Authentication failed: " + e.getMessage(), null));
         }
+    }
+
+    private AuthResponse buildAuthResponse(User user, String token) {
+        return AuthResponse.builder()
+                .token(token)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole().name())
+                .profilePicture(user.getProfilePicture())
+                .build();
     }
 
     /** GET /api/auth/me – returns current user info based on JWT */

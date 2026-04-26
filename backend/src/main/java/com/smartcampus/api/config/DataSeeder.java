@@ -28,15 +28,18 @@ public class DataSeeder implements ApplicationRunner {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationRepository notificationRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final Environment environment;
 
     public DataSeeder(UserRepository userRepository,
                       ResourceRepository resourceRepository,
                       NotificationRepository notificationRepository,
+                      org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
                       Environment environment) {
         this.userRepository = userRepository;
         this.resourceRepository = resourceRepository;
         this.notificationRepository = notificationRepository;
+        this.passwordEncoder = passwordEncoder;
         this.environment = environment;
     }
 
@@ -59,15 +62,26 @@ public class DataSeeder implements ApplicationRunner {
 
     // ── Users ──────────────────────────────────────────────────────
     private void seedUsers() {
-        // Admin user
+        // Head Admin user (Email/Password Login)
+        userRepository.findByEmail("campus.head@sliit.lk").orElseGet(() ->
+                userRepository.save(User.builder()
+                        .email("campus.head@sliit.lk")
+                        .name("Campus Head Admin")
+                        .password(passwordEncoder.encode("Admin@123"))
+                        .role(UserRole.ADMIN)
+                        .provider(AuthProvider.LOCAL)
+                        .build()));
+
+        // Admin user (legacy)
         User admin = userRepository.findByEmail("admin@sliit.lk").orElseGet(() ->
                 userRepository.save(User.builder()
                         .email("admin@sliit.lk")
                         .name("Admin User")
+                        .password(passwordEncoder.encode("admin123"))
                         .role(UserRole.ADMIN)
                         .provider(AuthProvider.LOCAL)
                         .build()));
-        logger.info("Admin user ready: {}", admin.getEmail());
+        logger.info("Head Admin account ready: campus.head@sliit.lk");
 
         // Demo regular user (simulates a Google-signed-in student)
         userRepository.findByEmail("student@sliit.lk").orElseGet(() ->

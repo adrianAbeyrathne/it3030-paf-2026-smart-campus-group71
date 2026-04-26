@@ -7,23 +7,18 @@ import ResourceDetailPage from './pages/resources/ResourceDetailPage';
 import ResourceFormPage from './pages/resources/ResourceFormPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import BookingManagementPage from './pages/bookings/BookingManagementPage';
-import { AuthProvider, useAuth } from './context/AuthContext';
-
-function AdminRoute({ children }) {
-  const { isAdmin } = useAuth();
-
-  if (!isAdmin()) {
-    return <Navigate to="/resources" replace />;
-  }
-
-  return children;
-}
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
 
 function AppLayout() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       <Navbar />
-      <main className="mx-auto w-full max-w-7xl px-4 py-6">
+      <main className="flex-grow mx-auto w-full max-w-7xl px-4 py-6">
         <Outlet />
       </main>
       <Footer />
@@ -34,24 +29,60 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Routes>
-        <Route element={<AppLayout />}>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/" element={<Navigate to="/resources" replace />} />
+          
+          {/* Admin Only */}
           <Route
             path="/dashboard"
             element={
-              <AdminRoute>
+              <ProtectedRoute roles={['ADMIN']}>
                 <DashboardPage />
-              </AdminRoute>
+              </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute roles={['ADMIN']}>
+                <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Shared / User Routes */}
           <Route path="/resources" element={<ResourceListPage />} />
-          <Route path="/bookings" element={<BookingManagementPage />} />
-          <Route path="/resources/new" element={<ResourceFormPage />} />
           <Route path="/resources/:id" element={<ResourceDetailPage />} />
-          <Route path="/resources/:id/edit" element={<ResourceFormPage />} />
+          
+          {/* Admin/Technician can manage resources */}
+          <Route 
+            path="/resources/new" 
+            element={
+              <ProtectedRoute roles={['ADMIN', 'TECHNICIAN']}>
+                <ResourceFormPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/resources/:id/edit" 
+            element={
+              <ProtectedRoute roles={['ADMIN', 'TECHNICIAN']}>
+                <ResourceFormPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route path="/bookings" element={<BookingManagementPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

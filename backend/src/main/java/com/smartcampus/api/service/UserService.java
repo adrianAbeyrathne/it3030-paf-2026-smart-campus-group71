@@ -8,6 +8,7 @@ import com.smartcampus.api.model.enums.UserRole;
 import com.smartcampus.api.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,14 +18,47 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // ──────────────────────────────────────────────────────────────
-    // Google OAuth – find existing user or create new one
+    // Authentication – Local and Google
     // ──────────────────────────────────────────────────────────────
+    
+    /** Local Registration */
+    public User registerUser(String name, String email, String password) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email already in use");
+        }
+        User newUser = User.builder()
+                .name(name)
+                .email(email)
+                .password(passwordEncoder.encode(password))
+                .role(UserRole.USER)
+                .provider(AuthProvider.LOCAL)
+                .build();
+        return userRepository.save(newUser);
+    }
+
+    /** Local Login Verification */
+    public User verifyLocalLogin(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+        
+        if (user.getProvider() != AuthProvider.LOCAL) {
+            throw new RuntimeException("This account uses " + user.getProvider() + " login");
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+        return user;
+    }
+
     public User findOrCreateByGoogle(String email, String name, String picture) {
         return userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = User.builder()
