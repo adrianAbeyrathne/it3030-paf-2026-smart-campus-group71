@@ -62,26 +62,35 @@ public class DataSeeder implements ApplicationRunner {
 
     // ── Users ──────────────────────────────────────────────────────
     private void seedUsers() {
-        // Head Admin user (Email/Password Login)
-        userRepository.findByEmail("campus.head@sliit.lk").orElseGet(() ->
-                userRepository.save(User.builder()
-                        .email("campus.head@sliit.lk")
-                        .name("Campus Head Admin")
-                        .password(passwordEncoder.encode("Admin@123"))
-                        .role(UserRole.ADMIN)
-                        .provider(AuthProvider.LOCAL)
-                        .build()));
+        // Head Admin user
+        User headAdmin = userRepository.findByEmail("campus.head@sliit.lk").orElse(new User());
+        headAdmin.setEmail("campus.head@sliit.lk");
+        headAdmin.setName("Campus Head Admin");
+        headAdmin.setPassword(passwordEncoder.encode("Admin@123"));
+        headAdmin.setRole(UserRole.ADMIN);
+        headAdmin.setProvider(AuthProvider.LOCAL);
+        userRepository.save(headAdmin);
 
         // Admin user (legacy)
-        User admin = userRepository.findByEmail("admin@sliit.lk").orElseGet(() ->
-                userRepository.save(User.builder()
-                        .email("admin@sliit.lk")
-                        .name("Admin User")
-                        .password(passwordEncoder.encode("admin123"))
-                        .role(UserRole.ADMIN)
-                        .provider(AuthProvider.LOCAL)
-                        .build()));
-        logger.info("Head Admin account ready: campus.head@sliit.lk");
+        User admin = userRepository.findByEmail("admin@sliit.lk").orElse(new User());
+        admin.setEmail("admin@sliit.lk");
+        admin.setName("Admin User");
+        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setRole(UserRole.ADMIN);
+        admin.setProvider(AuthProvider.LOCAL);
+        userRepository.save(admin);
+        
+        logger.info("Admin accounts synced and updated: campus.head@sliit.lk");
+
+        // Demo teacher (The Tutor)
+        User teacher = userRepository.findByEmail("teacher@sliit.lk").orElse(new User());
+        teacher.setEmail("teacher@sliit.lk");
+        teacher.setName("Professor Smith");
+        teacher.setPassword(passwordEncoder.encode("teacher123"));
+        teacher.setRole(UserRole.TEACHER);
+        teacher.setProvider(AuthProvider.LOCAL);
+        userRepository.save(teacher);
+        logger.info("Teacher account synced: teacher@sliit.lk");
 
         // Demo regular user (simulates a Google-signed-in student)
         userRepository.findByEmail("student@sliit.lk").orElseGet(() ->
@@ -106,55 +115,64 @@ public class DataSeeder implements ApplicationRunner {
 
     // ── Resources ─────────────────────────────────────────────────
     private void seedResources() {
-        if (resourceRepository.count() > 0) {
-            return;
-        }
+        // Force cleanup of old/broken data to fix the 500 errors reported by user
+        resourceRepository.deleteAll();
+        logger.info("Cleared old resources to sync with new campus model.");
 
         List<Resource> resources = List.of(
                 Resource.builder()
-                        .name("A-101 Lecture Hall")
-                        .type(ResourceType.LECTURE_HALL)
+                        .name("L606 Lecture Hall")
+                        .type(ResourceType.STUDIES)
                         .capacity(120)
-                        .location("Block A - Floor 1")
-                        .status(ResourceStatus.ACTIVE)
+                        .location("L606")
+                        .status(ResourceStatus.NOT_ACTIVE)
                         .availabilityWindows(List.of("Mon-Fri 08:00-17:00"))
-                        .description("Primary lecture hall with projector")
+                        .description("High-capacity lecture hall for general studies.")
+                        .build(),
+                Resource.builder()
+                        .name("G606 Presentation Suite")
+                        .type(ResourceType.PRESENTATION)
+                        .capacity(60)
+                        .location("G606")
+                        .status(ResourceStatus.NOT_ACTIVE)
+                        .availabilityWindows(List.of("Mon-Fri 08:00-17:00"))
+                        .description("Modern suite for student presentations and seminars.")
                         .build(),
                 Resource.builder()
                         .name("Networking Lab")
-                        .type(ResourceType.LAB)
+                        .type(ResourceType.LAB_WORK)
                         .capacity(40)
-                        .location("Engineering Building - Lab Wing")
+                        .location("LAB_POLE")
                         .status(ResourceStatus.ACTIVE)
                         .availabilityWindows(List.of("Mon-Sat 09:00-18:00"))
-                        .description("Hands-on networking equipment lab")
+                        .description("Hands-on networking equipment lab - Currently Occupied.")
+                        .build(),
+                Resource.builder()
+                        .name("IT Wing Computer Lab")
+                        .type(ResourceType.COMPUTER_LAB)
+                        .capacity(50)
+                        .location("IT_WING")
+                        .status(ResourceStatus.NOT_ACTIVE)
+                        .availabilityWindows(List.of("Mon-Fri 09:00-20:00"))
+                        .description("Equipped with latest workstations for programming.")
                         .build(),
                 Resource.builder()
                         .name("Senate Meeting Room")
                         .type(ResourceType.MEETING_ROOM)
                         .capacity(20)
-                        .location("Admin Block - Floor 2")
-                        .status(ResourceStatus.ACTIVE)
+                        .location("MAIN_BUILDING")
+                        .status(ResourceStatus.OUT_OF_SERVICE)
                         .availabilityWindows(List.of("Mon-Fri 09:00-16:00"))
-                        .description("Executive meetings and planning sessions")
+                        .description("Maintenance in progress - Under Renovation.")
                         .build(),
                 Resource.builder()
                         .name("Portable PA System")
                         .type(ResourceType.EQUIPMENT)
                         .capacity(1)
-                        .location("Media Unit Store")
-                        .status(ResourceStatus.ACTIVE)
+                        .location("MAIN_BUILDING")
+                        .status(ResourceStatus.NOT_ACTIVE)
                         .availabilityWindows(List.of("Mon-Fri 08:30-17:00"))
-                        .description("Portable sound system for events")
-                        .build(),
-                Resource.builder()
-                        .name("Innovation Studio")
-                        .type(ResourceType.LAB)
-                        .capacity(30)
-                        .location("Innovation Center - Floor 3")
-                        .status(ResourceStatus.ACTIVE)
-                        .availabilityWindows(List.of("Mon-Sun 10:00-20:00"))
-                        .description("Collaborative prototyping space")
+                        .description("Portable sound system for events.")
                         .build());
 
         resourceRepository.saveAll(resources);

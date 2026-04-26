@@ -3,8 +3,11 @@ package com.smartcampus.api.service;
 import com.smartcampus.api.dto.NotificationResponseDTO;
 import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.model.Notification;
+import com.smartcampus.api.model.User;
 import com.smartcampus.api.model.enums.NotificationType;
+import com.smartcampus.api.model.enums.UserRole;
 import com.smartcampus.api.repository.NotificationRepository;
+import com.smartcampus.api.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -12,10 +15,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class NotificationService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
 
     public NotificationResponseDTO createNotification(
@@ -30,6 +36,21 @@ public class NotificationService {
                 .build();
         Notification saved = notificationRepository.save(notification);
         return mapToResponse(saved);
+    }
+
+    /** Notify all users with ADMIN role */
+    public void notifyAllAdmins(NotificationType type, String title, String message, String relatedEntityId) {
+        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+        logger.info("Found {} admins to notify for event: {}", admins.size(), title);
+        
+        if (admins.isEmpty()) {
+            logger.warn("No ADMIN users found in database! Notifications will not be delivered.");
+        }
+
+        admins.forEach(admin -> {
+            logger.info("Delivering notification to Admin: {}", admin.getEmail());
+            createNotification(admin.getId(), type, title, message, relatedEntityId);
+        });
     }
 
     public List<NotificationResponseDTO> getNotificationsForUser(String userId) {

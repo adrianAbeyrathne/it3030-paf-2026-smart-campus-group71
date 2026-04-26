@@ -96,6 +96,12 @@ public class ResourceService {
                 .build();
     }
 
+    private String formatEnumLabel(Enum<?> e) {
+        if (e == null) return "Unknown";
+        String name = e.name().toLowerCase(Locale.ROOT).replace('_', ' ');
+        return name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
+    }
+
     private Resource mapToEntity(ResourceRequestDTO requestDTO) {
         return Resource.builder()
                 .name(requestDTO.getName())
@@ -109,13 +115,18 @@ public class ResourceService {
     }
 
     private ResourceResponseDTO mapToResponse(Resource resource) {
+        ResourceType type = resource.getType() != null ? resource.getType() : ResourceType.LECTURE_HALL;
+        ResourceStatus status = resource.getStatus() != null ? resource.getStatus() : ResourceStatus.NOT_ACTIVE;
+
         return ResourceResponseDTO.builder()
                 .id(resource.getId())
                 .name(resource.getName())
-                .type(resource.getType())
+                .type(type)
+                .typeLabel(formatEnumLabel(type))
                 .capacity(resource.getCapacity())
                 .location(resource.getLocation())
-                .status(resource.getStatus())
+                .status(status)
+                .statusLabel(formatEnumLabel(status))
                 .availabilityWindows(resource.getAvailabilityWindows())
                 .description(resource.getDescription())
                 .createdAt(resource.getCreatedAt())

@@ -25,6 +25,8 @@ public class ResourceResponseDTO {
     private ResourceStatus status;
     private List<String> availabilityWindows;
     private String description;
+    private String typeLabel;
+    private String statusLabel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
