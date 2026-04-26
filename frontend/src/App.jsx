@@ -6,6 +6,7 @@ import ResourceListPage from './pages/resources/ResourceListPage';
 import ResourceDetailPage from './pages/resources/ResourceDetailPage';
 import ResourceFormPage from './pages/resources/ResourceFormPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import BookingManagementPage from './pages/bookings/BookingManagementPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AdminRoute({ children }) {
@@ -45,6 +46,7 @@ function App() {
             }
           />
           <Route path="/resources" element={<ResourceListPage />} />
+          <Route path="/bookings" element={<BookingManagementPage />} />
           <Route path="/resources/new" element={<ResourceFormPage />} />
           <Route path="/resources/:id" element={<ResourceDetailPage />} />
           <Route path="/resources/:id/edit" element={<ResourceFormPage />} />
