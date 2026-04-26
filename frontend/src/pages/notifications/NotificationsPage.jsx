@@ -11,6 +11,7 @@ const formatDate = (value) => {
 };
 
 const typeColorMap = {
+  BOOKING_REQUESTED: 'bg-purple-100 text-purple-700',
   BOOKING_APPROVED: 'bg-[#10B981]/20 text-[#047857]',
   BOOKING_REJECTED: 'bg-[#EF4444]/20 text-[#B91C1C]',
   BOOKING_CANCELLED: 'bg-[#F59E0B]/20 text-[#B45309]',

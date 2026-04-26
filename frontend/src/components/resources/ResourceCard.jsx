@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 
 const statusStyles = {
-  ACTIVE: 'bg-[#10B981]/15 text-[#047857]',
-  OUT_OF_SERVICE: 'bg-[#EF4444]/15 text-[#B91C1C]'
+  ACTIVE: 'bg-emerald-50 text-emerald-600 border-emerald-100', // Occupied
+  NOT_ACTIVE: 'bg-blue-50 text-blue-600 border-blue-100', // Available
+  OUT_OF_SERVICE: 'bg-rose-50 text-rose-600 border-rose-100' // Red for Maintenance
 };
 
 function ResourceCard({ resource }) {
