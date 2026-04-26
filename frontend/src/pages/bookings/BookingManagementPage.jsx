@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import bookingService from '../../services/bookingService';
 import resourceService from '../../services/resourceService';
@@ -36,7 +36,7 @@ export default function BookingManagementPage() {
     expectedAttendees: '1'
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [bookingsData, resourcesData] = await Promise.all([
@@ -50,11 +50,11 @@ export default function BookingManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Live Availability Check
   useEffect(() => {
