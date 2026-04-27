@@ -9,3 +9,6 @@ server.port=8888
 spring.data.mongodb.uri=${MONGO_URI:mongodb+srv://DB_USERNAME:DB_PASSWORD@cluster0.gaclcxn.mongodb.net/}
 spring.data.mongodb.database=smart_campus_db
 spring.application.name=smart-campus-api
+app.jwt.secret=PUT_A_BASE64_ENCODED_SECRET_HERE
+app.jwt.expiration=86400000
+app.google.client-id=YOUR_GOOGLE_CLIENT_ID_HERE

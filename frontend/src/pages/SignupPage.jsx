@@ -17,8 +17,7 @@ export default function SignupPage() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    console.log('Sending signup request to:', `${API_URL}/api/auth/signup`);
-    
+
     if (formData.password !== formData.confirmPassword) {
       return toast.error('Passwords do not match');
     }
@@ -40,78 +39,100 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-[#1E3A5F]">Create Account</h2>
-          <p className="mt-2 text-sm text-slate-600">Join the Smart Campus Hub</p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <input
-                type="password"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
-              <input
-                type="password"
-                required
-                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              />
-            </div>
+    <div className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto grid w-full max-w-6xl items-stretch gap-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-xl lg:grid-cols-[1fr,1fr]">
+        <div className="w-full space-y-8 rounded-2xl border border-slate-100 bg-white p-8 sm:p-10">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-[#1E3A5F]">Create Account</h2>
+            <p className="mt-2 text-sm text-slate-600">Join the Smart Campus platform</p>
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#1E3A5F] hover:bg-[#153357] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A5F] transition-colors"
-          >
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
+          <form className="mt-8 space-y-6" onSubmit={handleSignup}>
+            <div className="rounded-md shadow-sm space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
+                  placeholder="********"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-[#1E3A5F] focus:border-[#1E3A5F] sm:text-sm"
+                  placeholder="********"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                />
+              </div>
+            </div>
 
-        <div className="text-center mt-6">
-          <p className="text-sm text-slate-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-[#1E3A5F] hover:text-blue-600">
-              Sign in here
-            </Link>
-          </p>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#1E3A5F] hover:bg-[#153357] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A5F] transition-colors"
+            >
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
+
+          <div className="text-center mt-6">
+            <p className="text-sm text-slate-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-[#1E3A5F] hover:text-blue-600">
+                Sign in here
+              </Link>
+            </p>
+          </div>
         </div>
+
+        <aside className="relative hidden overflow-hidden rounded-2xl bg-slate-900 p-10 text-white lg:block">
+          <img
+            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=80"
+            alt="Campus onboarding"
+            className="absolute inset-0 h-full w-full object-cover opacity-35"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#061944] via-[#0b2c63]/90 to-[#0f766e]/80" />
+          <div className="relative z-10">
+            <p className="inline-block rounded-full border border-emerald-300/40 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
+              Fast onboarding
+            </p>
+            <h1 className="mt-5 text-4xl font-black leading-tight">
+              Start collaborating across your campus from day one.
+            </h1>
+            <p className="mt-4 text-slate-200">
+              Once registered, you can request resources, track approvals, report issues, and receive live updates.
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );

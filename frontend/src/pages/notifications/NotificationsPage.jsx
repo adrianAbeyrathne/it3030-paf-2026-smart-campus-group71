@@ -29,6 +29,7 @@ const formatType = (value) =>
 function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   const loadNotifications = async () => {
@@ -48,11 +49,24 @@ function NotificationsPage() {
   }, []);
 
   const filteredNotifications = useMemo(() => {
-    if (activeTab === 'unread') {
-      return notifications.filter((item) => !item.read && !item.isRead);
-    }
-    return notifications;
-  }, [activeTab, notifications]);
+    const baseList =
+      activeTab === 'unread' ? notifications.filter((item) => !item.read && !item.isRead) : notifications;
+
+    if (!query.trim()) return baseList;
+    const q = query.toLowerCase();
+    return baseList.filter((item) =>
+      [item.title, item.message, item.type].filter(Boolean).join(' ').toLowerCase().includes(q)
+    );
+  }, [activeTab, notifications, query]);
+
+  const summary = useMemo(() => {
+    const unread = notifications.filter((item) => !item.read && !item.isRead).length;
+    return {
+      total: notifications.length,
+      unread,
+      read: notifications.length - unread
+    };
+  }, [notifications]);
 
   const handleMarkAllRead = async () => {
     try {
@@ -91,8 +105,38 @@ function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-lg">
+        <img
+          src="https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1600&q=80"
+          alt="Notification center"
+          className="absolute inset-0 h-full w-full object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#061944] via-[#0b2c63] to-[#0f766e]/70" />
+        <div className="relative z-10">
+          <h1 className="text-4xl font-black">Notification Center</h1>
+          <p className="mt-3 max-w-2xl text-slate-200">
+            Stay updated with booking decisions, ticket progress, and new comments in one timeline.
+          </p>
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Total notifications</p>
+          <p className="mt-1 text-3xl font-black text-[#0b2c63]">{summary.total}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Unread</p>
+          <p className="mt-1 text-3xl font-black text-amber-600">{summary.unread}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Read</p>
+          <p className="mt-1 text-3xl font-black text-emerald-600">{summary.read}</p>
+        </article>
+      </section>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Notifications</h1>
+        <h2 className="text-2xl font-semibold text-slate-900">Timeline</h2>
         <button
           type="button"
           onClick={handleMarkAllRead}
@@ -100,6 +144,16 @@ function NotificationsPage() {
         >
           Mark all as read
         </button>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <input
+          type="text"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search notification title, message, or type..."
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none ring-[#0b2c63]/20 focus:ring"
+        />
       </div>
 
       <div className="inline-flex rounded-md border border-slate-300 bg-white p-1">
