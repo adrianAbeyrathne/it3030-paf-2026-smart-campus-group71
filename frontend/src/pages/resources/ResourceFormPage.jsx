@@ -5,8 +5,9 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ResourceForm from '../../components/resources/ResourceForm';
 import resourceService from '../../services/resourceService';
 
-const TYPE_OPTIONS = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
-const STATUS_OPTIONS = ['ACTIVE', 'OUT_OF_SERVICE'];
+const TYPE_OPTIONS = ['STUDIES', 'LAB_WORK', 'COMPUTER_LAB', 'PRESENTATION', 'LECTURE_HALL'];
+const STATUS_OPTIONS = ['ACTIVE', 'NOT_ACTIVE', 'OUT_OF_SERVICE'];
+const LOCATION_OPTIONS = ['L606', 'G606', 'LAB_POLE', 'MAIN_BUILDING', 'IT_WING', 'ENGINEERING_BLOCK'];
 
 function ResourceFormPage() {
   const { id } = useParams();
@@ -68,6 +69,7 @@ function ResourceFormPage() {
         initialValues={initialValues}
         typeOptions={TYPE_OPTIONS}
         statusOptions={STATUS_OPTIONS}
+        locationOptions={LOCATION_OPTIONS}
         isSubmitting={isSubmitting}
         submitLabel={isEditMode ? 'Update Resource' : 'Create Resource'}
         onSubmit={handleSubmit}

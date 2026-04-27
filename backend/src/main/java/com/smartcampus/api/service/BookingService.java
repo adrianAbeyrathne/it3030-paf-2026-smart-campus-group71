@@ -6,11 +6,13 @@ import com.smartcampus.api.dto.BookingReviewRequestDTO;
 import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.model.Booking;
 import com.smartcampus.api.model.Resource;
+import com.smartcampus.api.model.User;
 import com.smartcampus.api.model.enums.BookingStatus;
 import com.smartcampus.api.model.enums.NotificationType;
 import com.smartcampus.api.model.enums.ResourceStatus;
 import com.smartcampus.api.repository.BookingRepository;
 import com.smartcampus.api.repository.ResourceRepository;
+import com.smartcampus.api.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,17 +23,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class BookingService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BookingService.class);
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     public BookingService(
             BookingRepository bookingRepository,
             ResourceRepository resourceRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            UserRepository userRepository) {
         this.bookingRepository = bookingRepository;
         this.resourceRepository = resourceRepository;
         this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     public BookingResponseDTO createBooking(BookingRequestDTO requestDTO, String userId) {
@@ -61,6 +67,16 @@ public class BookingService {
                 .build();
 
         Booking saved = bookingRepository.save(booking);
+
+        // Notify Admins about the new request
+        User teacher = userRepository.findById(userId).orElse(null);
+        String teacherName = teacher != null ? teacher.getName() : "A teacher";
+        notificationService.notifyAllAdmins(
+                NotificationType.BOOKING_REQUESTED,
+                "New Booking Request",
+                teacherName + " has requested " + resource.getName() + " for " + saved.getBookingDate(),
+                saved.getId());
+
         return mapToResponse(saved);
     }
 
@@ -123,12 +139,18 @@ public class BookingService {
             String reason = updated.getReviewReason() == null || updated.getReviewReason().isBlank()
                     ? "No reason provided"
                     : updated.getReviewReason();
+            
+            // Send notification BEFORE deleting
             notificationService.createNotification(
                     updated.getUserId(),
                     NotificationType.BOOKING_REJECTED,
                     "Booking Rejected",
                     "Your booking for " + updated.getResourceName() + " was rejected. Reason: " + reason,
-                    updated.getId());
+                    null); // Entity will be gone
+
+            // Delete the card (booking record) as requested
+            bookingRepository.deleteById(updated.getId());
+            return null; // Return null to indicate deletion
         }
 
         return mapToResponse(updated);
@@ -208,6 +230,32 @@ public class BookingService {
 
         if (!start.isBefore(end)) {
             throw new ValidationException("startTime must be before endTime");
+        }
+    }
+
+    public List<BookingResponseDTO> getDailySchedule(String date) {
+        try {
+            java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+            return bookingRepository.findByBookingDate(localDate).stream()
+                    .filter(b -> b.getStatus() == BookingStatus.APPROVED || b.getStatus() == BookingStatus.PENDING)
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error fetching schedule for date {}: {}", date, e.getMessage());
+            return List.of(); // Return empty instead of 500
+        }
+    }
+
+    public List<BookingResponseDTO> getResourceSchedule(String resourceId, String date) {
+        try {
+            java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+            return bookingRepository.findByResourceIdAndBookingDateOrderByStartTimeAsc(resourceId, localDate)
+                    .stream()
+                    .filter(b -> b.getStatus() == BookingStatus.APPROVED || b.getStatus() == BookingStatus.PENDING)
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            return List.of();
         }
     }
 

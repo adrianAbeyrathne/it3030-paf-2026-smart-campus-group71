@@ -35,6 +35,7 @@ function ResourceForm({
   initialValues,
   typeOptions,
   statusOptions,
+  locationOptions,
   isSubmitting,
   submitLabel,
   onSubmit
@@ -190,12 +191,19 @@ function ResourceForm({
           <label htmlFor="location" className="mb-1 block text-sm font-medium text-slate-700">
             Location
           </label>
-          <input
+          <select
             id="location"
             value={values.location}
             onChange={(event) => setField('location', event.target.value)}
             className={inputClass}
-          />
+          >
+            <option value="">Select location</option>
+            {(locationOptions || []).map((option) => (
+              <option key={option} value={option}>
+                {toLabel(option)}
+              </option>
+            ))}
+          </select>
           {errors.location && <p className="mt-1 text-xs text-[#EF4444]">{errors.location}</p>}
         </div>
 

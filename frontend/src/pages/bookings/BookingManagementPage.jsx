@@ -1,357 +1,362 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import bookingService from '../../services/bookingService';
 import resourceService from '../../services/resourceService';
 import { useAuth } from '../../context/AuthContext';
-
-const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useLocation } from 'react-router-dom';
 
 const statusStyles = {
-  PENDING: 'bg-[#F59E0B]/20 text-[#92400E]',
-  APPROVED: 'bg-[#10B981]/20 text-[#047857]',
-  REJECTED: 'bg-[#EF4444]/20 text-[#B91C1C]',
-  CANCELLED: 'bg-[#64748B]/20 text-[#334155]'
+  PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
+  APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  REJECTED: 'bg-rose-100 text-rose-700 border-rose-200',
+  CANCELLED: 'bg-slate-100 text-slate-700 border-slate-200'
 };
 
-const initialFormState = {
-  resourceId: '',
-  bookingDate: '',
-  startTime: '',
-  endTime: '',
-  purpose: '',
-  expectedAttendees: ''
-};
-
-const formatLabel = (value) =>
-  (value || '')
-    .toLowerCase()
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-
-function BookingManagementPage() {
+export default function BookingManagementPage() {
   const { user, isAdmin } = useAuth();
+  const location = useLocation();
+  const isTeacher = user?.role === 'TEACHER';
+
   const [resources, setResources] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [form, setForm] = useState(initialFormState);
-  const [statusFilter, setStatusFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const userId = user?.email || 'user123';
-  const role = user?.role || 'USER';
+  const [roomSchedule, setRoomSchedule] = useState([]);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
 
-  const loadBookings = useCallback(async () => {
+  const [formData, setFormData] = useState({
+    resourceId: location.state?.preselectedResourceId || '',
+    bookingDate: new Date().toISOString().split('T')[0],
+    startTime: '',
+    endTime: '',
+    purpose: '',
+    expectedAttendees: '1'
+  });
+
+  // ---------------------------
+  // FETCH DATA (FIXED)
+  // ---------------------------
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params = statusFilter ? { status: statusFilter } : {};
 
-      const data = isAdmin()
-        ? await bookingService.getAllBookings({ ...params, userRole: role })
-        : await bookingService.getMyBookings({ ...params, userId });
+      const [bookingsData, resourcesData] = await Promise.all([
+        isAdmin()
+          ? bookingService.getAllBookings()
+          : bookingService.getMyBookings(),
+        resourceService.getAllResources({ status: 'ACTIVE' })
+      ]);
 
-      setBookings(data || []);
+      setBookings(bookingsData || []);
+      setResources(resourcesData || []);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to load bookings';
-      toast.error(message);
+      toast.error('Failed to load booking data');
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, role, statusFilter, userId]);
+  }, [isAdmin]);
 
   useEffect(() => {
-    const loadResources = async () => {
+    fetchData();
+  }, [fetchData]);
+
+  // ---------------------------
+  // LIVE AVAILABILITY CHECK
+  // ---------------------------
+  useEffect(() => {
+    const checkRoomAvailability = async () => {
+      if (!formData.resourceId || !formData.bookingDate) {
+        setRoomSchedule([]);
+        return;
+      }
+
       try {
-        const data = await resourceService.getAllResources({ status: 'ACTIVE' });
-        setResources(data || []);
-      } catch {
-        toast.error('Failed to load resources for booking');
+        setIsCheckingAvailability(true);
+
+        const response = await bookingService.getDailySchedule(
+          formData.bookingDate
+        );
+
+        const filtered = (response || []).filter(
+          b => b.resourceId === formData.resourceId
+        );
+
+        setRoomSchedule(filtered);
+      } catch (err) {
+        console.error('Availability check failed', err);
+      } finally {
+        setIsCheckingAvailability(false);
       }
     };
 
-    loadResources();
-  }, []);
+    const timeoutId = setTimeout(checkRoomAvailability, 400);
+    return () => clearTimeout(timeoutId);
+  }, [formData.resourceId, formData.bookingDate]);
 
-  useEffect(() => {
-    loadBookings();
-  }, [loadBookings]);
-
-  const mappedBookings = useMemo(
-    () =>
-      bookings.map((booking) => ({
-        ...booking,
-        statusLabel: formatLabel(booking.status)
-      })),
-    [bookings]
-  );
-
-  const handleCreateBooking = async (event) => {
-    event.preventDefault();
+  // ---------------------------
+  // CREATE BOOKING
+  // ---------------------------
+  const handleCreateBooking = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-      const payload = {
-        resourceId: form.resourceId,
-        bookingDate: form.bookingDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        purpose: form.purpose,
-        expectedAttendees: form.expectedAttendees ? Number(form.expectedAttendees) : undefined
-      };
+      await bookingService.createBooking({
+        ...formData,
+        expectedAttendees: Number(formData.expectedAttendees) || 1
+      });
 
-      await bookingService.createBooking(payload, { userId });
-      toast.success('Booking request submitted');
-      setForm(initialFormState);
-      await loadBookings();
+      toast.success('Booking request sent successfully');
+
+      setFormData({
+        ...formData,
+        resourceId: '',
+        purpose: '',
+        expectedAttendees: '1',
+        startTime: '',
+        endTime: ''
+      });
+
+      fetchData();
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create booking';
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Booking failed');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleApprove = async (id) => {
-    try {
-      await bookingService.reviewBooking(id, { status: 'APPROVED' }, { userRole: role, reviewerUserId: userId });
-      toast.success('Booking approved');
-      await loadBookings();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to approve booking';
-      toast.error(message);
-    }
-  };
+  // ---------------------------
+  // ADMIN REVIEW
+  // ---------------------------
+  const handleReview = async (id, status) => {
+    let reason = '';
 
-  const handleReject = async (id) => {
-    const reason = window.prompt('Enter rejection reason:');
-    if (!reason || !reason.trim()) {
-      toast.error('Rejection reason is required');
-      return;
+    if (status === 'REJECTED') {
+      reason = window.prompt('Enter rejection reason:');
+      if (!reason) return;
     }
 
     try {
-      await bookingService.reviewBooking(
-        id,
-        { status: 'REJECTED', reason: reason.trim() },
-        { userRole: role, reviewerUserId: userId }
-      );
-      toast.success('Booking rejected');
-      await loadBookings();
+      await bookingService.reviewBooking(id, { status, reason });
+      toast.success(`Booking ${status.toLowerCase()}`);
+      fetchData();
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to reject booking';
-      toast.error(message);
+      toast.error('Action failed');
     }
   };
 
-  const handleCancel = async (id) => {
-    try {
-      await bookingService.cancelBooking(id, { userId, userRole: role });
-      toast.success('Booking cancelled');
-      await loadBookings();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to cancel booking';
-      toast.error(message);
-    }
-  };
+  const bookingStats = useMemo(() => {
+    const pending = bookings.filter((item) => item.status === 'PENDING').length;
+    const approved = bookings.filter((item) => item.status === 'APPROVED').length;
+    const rejected = bookings.filter((item) => item.status === 'REJECTED').length;
+    const cancelled = bookings.filter((item) => item.status === 'CANCELLED').length;
+    return { pending, approved, rejected, cancelled };
+  }, [bookings]);
+
+  if (isLoading) {
+    return <LoadingSpinner label="Loading bookings..." />;
+  }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">Booking Management</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Submit booking requests and track workflow status (PENDING, APPROVED, REJECTED, CANCELLED).
-        </p>
-
-        <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={handleCreateBooking}>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Resource</span>
-            <select
-              value={form.resourceId}
-              onChange={(event) => setForm((prev) => ({ ...prev, resourceId: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              required
-            >
-              <option value="">Select resource</option>
-              {resources.map((resource) => (
-                <option key={resource.id} value={resource.id}>
-                  {resource.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Booking Date</span>
-            <input
-              type="date"
-              value={form.bookingDate}
-              onChange={(event) => setForm((prev) => ({ ...prev, bookingDate: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              required
-            />
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Start Time</span>
-            <input
-              type="time"
-              value={form.startTime}
-              onChange={(event) => setForm((prev) => ({ ...prev, startTime: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              required
-            />
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">End Time</span>
-            <input
-              type="time"
-              value={form.endTime}
-              onChange={(event) => setForm((prev) => ({ ...prev, endTime: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              required
-            />
-          </label>
-
-          <label className="space-y-1 text-sm md:col-span-2">
-            <span className="font-medium text-slate-700">Purpose</span>
-            <input
-              type="text"
-              value={form.purpose}
-              onChange={(event) => setForm((prev) => ({ ...prev, purpose: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              placeholder="Workshop, group meeting, presentation..."
-              required
-            />
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Expected Attendees</span>
-            <input
-              type="number"
-              min="1"
-              value={form.expectedAttendees}
-              onChange={(event) => setForm((prev) => ({ ...prev, expectedAttendees: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-              placeholder="Optional"
-            />
-          </label>
-
-          <div className="flex items-end">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Booking Request'}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">{isAdmin() ? 'All Bookings' : 'My Bookings'}</h2>
-
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            <option value="">All Statuses</option>
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {formatLabel(status)}
-              </option>
-            ))}
-          </select>
+    <div className="max-w-6xl mx-auto space-y-8">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-lg">
+        <img
+          src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80"
+          alt="University hall"
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#061944] via-[#0b2d63] to-[#0f766e]/70" />
+        <div className="relative z-10">
+          <p className="inline-block rounded-full border border-emerald-300/40 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200">
+            Booking Management
+          </p>
+          <h1 className="mt-4 text-4xl font-black sm:text-5xl">Manage Reservations</h1>
+          <p className="mt-3 max-w-2xl text-slate-200">
+            Create, review, and monitor campus space bookings with live availability checks and clear status tracking.
+          </p>
         </div>
-
-        {isLoading ? (
-          <p className="py-8 text-sm text-slate-500">Loading bookings...</p>
-        ) : mappedBookings.length === 0 ? (
-          <p className="py-8 text-sm text-slate-500">No bookings found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead>
-                <tr className="text-left text-slate-500">
-                  <th className="px-3 py-2 font-medium">Resource</th>
-                  <th className="px-3 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 font-medium">Time</th>
-                  <th className="px-3 py-2 font-medium">Requested By</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="px-3 py-2 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {mappedBookings.map((booking) => {
-                  const canReview = isAdmin() && booking.status === 'PENDING';
-                  const canCancel =
-                    booking.status === 'APPROVED' && (isAdmin() || booking.userId === userId);
-
-                  return (
-                    <tr key={booking.id}>
-                      <td className="px-3 py-3">
-                        <p className="font-medium text-slate-800">{booking.resourceName}</p>
-                        <p className="text-xs text-slate-500">{booking.purpose}</p>
-                      </td>
-                      <td className="px-3 py-3 text-slate-700">{booking.bookingDate}</td>
-                      <td className="px-3 py-3 text-slate-700">
-                        {booking.startTime} - {booking.endTime}
-                      </td>
-                      <td className="px-3 py-3 text-slate-700">{booking.userId}</td>
-                      <td className="px-3 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            statusStyles[booking.status] || 'bg-slate-100 text-slate-700'
-                          }`}
-                        >
-                          {booking.statusLabel}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          {canReview && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleApprove(booking.id)}
-                                className="rounded-md bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-white"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleReject(booking.id)}
-                                className="rounded-md bg-[#EF4444] px-3 py-1.5 text-xs font-semibold text-white"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-
-                          {canCancel && (
-                            <button
-                              type="button"
-                              onClick={() => handleCancel(booking.id)}
-                              className="rounded-md bg-[#334155] px-3 py-1.5 text-xs font-semibold text-white"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Pending requests</p>
+          <p className="mt-1 text-3xl font-black text-amber-600">{bookingStats.pending}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Approved</p>
+          <p className="mt-1 text-3xl font-black text-emerald-600">{bookingStats.approved}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Rejected</p>
+          <p className="mt-1 text-3xl font-black text-rose-600">{bookingStats.rejected}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Cancelled</p>
+          <p className="mt-1 text-3xl font-black text-slate-700">{bookingStats.cancelled}</p>
+        </article>
+      </section>
+
+      <div>
+        <p className="text-slate-500 mt-1 text-base">
+          {isAdmin()
+            ? 'Manage all facility bookings'
+            : 'Request and track your bookings'}
+        </p>
+      </div>
+
+      {/* FORM SECTION */}
+      {isTeacher && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* FORM */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border p-8">
+
+            <h2 className="text-lg font-bold mb-6">
+              Request Facility
+            </h2>
+
+            <form onSubmit={handleCreateBooking} className="grid gap-4">
+
+              <select
+                value={formData.resourceId}
+                onChange={(e) =>
+                  setFormData({ ...formData, resourceId: e.target.value })
+                }
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium outline-none ring-[#0b2d63]/20 focus:ring"
+              >
+                <option value="">Select Resource</option>
+                {resources.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="date"
+                value={formData.bookingDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, bookingDate: e.target.value })
+                }
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium outline-none ring-[#0b2d63]/20 focus:ring"
+              />
+
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium outline-none ring-[#0b2d63]/20 focus:ring"
+              />
+
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium outline-none ring-[#0b2d63]/20 focus:ring"
+              />
+
+              <input
+                type="text"
+                placeholder="Purpose"
+                value={formData.purpose}
+                onChange={(e) =>
+                  setFormData({ ...formData, purpose: e.target.value })
+                }
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium outline-none ring-[#0b2d63]/20 focus:ring"
+              />
+
+              <button
+                disabled={isSubmitting}
+                className="rounded-xl bg-[#0b2d63] px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Booking'}
+              </button>
+
+            </form>
+          </div>
+
+          {/* AVAILABILITY */}
+          <div className="bg-slate-50 p-6 rounded-xl border">
+            <h3 className="font-bold mb-4 text-slate-900">
+              Availability
+              {isCheckingAvailability && (
+                <span className="text-xs ml-2 text-blue-500">checking...</span>
+              )}
+            </h3>
+
+            {roomSchedule.length === 0 ? (
+              <p className="text-sm text-green-600">
+                Fully available
+              </p>
+            ) : (
+              roomSchedule.map((s) => (
+                <div key={s.id} className="p-3 border rounded-lg mb-2 bg-white">
+                  <div className="text-xs font-bold text-slate-800">
+                    {s.startTime} - {s.endTime}
+                  </div>
+                  <div className="text-xs text-slate-500">{s.status}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* BOOKINGS LIST */}
+      <div className="space-y-4">
+
+        <h2 className="font-bold">
+          {isAdmin() ? 'All Bookings' : 'My Bookings'}
+        </h2>
+
+        {bookings.map((b) => (
+          <div key={b.id} className="border border-slate-200 bg-white p-4 rounded-xl flex flex-wrap justify-between gap-3">
+
+            <div>
+              <div className="font-bold text-slate-900">{b.resourceName}</div>
+              <div className="text-sm text-gray-500">{b.purpose}</div>
+            </div>
+
+            <div className="flex gap-2 items-center">
+
+              <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusStyles[b.status]}`}>
+                {b.status}
+              </span>
+
+              {isAdmin() && b.status === 'PENDING' && (
+                <>
+                  <button
+                    onClick={() => handleReview(b.id, 'APPROVED')}
+                    className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-white hover:brightness-110"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReview(b.id, 'REJECTED')}
+                    className="rounded-lg bg-rose-500 px-3 py-2 text-xs font-bold text-white hover:brightness-110"
+                  >
+                    Reject
+                  </button>
+                </>
+              )}
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
     </div>
   );
 }
-
-export default BookingManagementPage;

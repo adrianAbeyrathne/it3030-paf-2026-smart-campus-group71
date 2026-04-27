@@ -1,12 +1,12 @@
 package com.smartcampus.api.model.enums;
 
 public enum ResourceType {
+    STUDIES,
+    LAB_WORK,
+    COMPUTER_LAB,
+    PRESENTATION,
     LECTURE_HALL,
-    LAB,
     MEETING_ROOM,
     EQUIPMENT,
-    COMPUTER_LAB,
-    LAB_WORK,
-    PRESENTATION,
-    STUDIES
+    LAB // Legacy compatibility to prevent 500 errors on old data
 }

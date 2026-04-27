@@ -33,6 +33,7 @@ function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
+  const homeLink = isAdmin() ? '/dashboard' : '/resources';
 
   useEffect(() => {
     if (!user) return;
@@ -47,6 +48,8 @@ function Navbar() {
     };
 
     fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
   }, [location.pathname, user]);
 
   const handleLogout = () => {
@@ -58,7 +61,7 @@ function Navbar() {
     <header className="sticky top-0 z-40 border-b border-white/20 bg-[#1E3A5F] shadow-lg">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link to="/" className="text-lg font-bold tracking-tight text-white">
+          <Link to={homeLink} className="text-lg font-bold tracking-tight text-white">
             Smart Campus <span className="font-normal opacity-70 ml-1">SLIIT</span>
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
@@ -75,9 +78,11 @@ function Navbar() {
             <NavLink to="/resources" className={navLinkClass}>
               Resources
             </NavLink>
-            <NavLink to="/bookings" className={navLinkClass}>
-              Bookings
-            </NavLink>
+            {(isAdmin() || user?.role === 'TEACHER') && (
+              <NavLink to="/bookings" className={navLinkClass}>
+                Bookings
+              </NavLink>
+            )}
             <NavLink to="/notifications" className={navLinkClass}>
               Notifications
             </NavLink>
@@ -134,9 +139,11 @@ function Navbar() {
           <NavLink to="/resources" className={navLinkClass}>
             Resources
           </NavLink>
-          <NavLink to="/bookings" className={navLinkClass}>
-            Bookings
-          </NavLink>
+          {(isAdmin() || user?.role === 'TEACHER') && (
+            <NavLink to="/bookings" className={navLinkClass}>
+              Bookings
+            </NavLink>
+          )}
           <NavLink to="/notifications" className={navLinkClass}>
             Alerts
           </NavLink>

@@ -5,56 +5,52 @@ const getData = (response) => {
   return payload?.data ?? payload;
 };
 
-export const getMyBookings = async ({ userId, status } = {}) => {
+/** Get current user's bookings */
+export const getMyBookings = async ({ status } = {}) => {
   const params = {
-    ...(userId ? { userId } : {}),
     ...(status ? { status } : {})
   };
-
   const response = await axiosInstance.get('/api/bookings/my', { params });
   return getData(response) ?? [];
 };
 
-export const getAllBookings = async ({ userRole = 'ADMIN', status } = {}) => {
+/** Get all bookings (Admin only) */
+export const getAllBookings = async ({ status } = {}) => {
   const params = {
-    userRole,
     ...(status ? { status } : {})
   };
-
   const response = await axiosInstance.get('/api/bookings', { params });
   return getData(response) ?? [];
 };
 
-export const createBooking = async (data, { userId } = {}) => {
-  const response = await axiosInstance.post('/api/bookings', data, {
-    params: userId ? { userId } : {}
-  });
+/** Get daily schedule for a date (Admin only) */
+export const getDailySchedule = async (date) => {
+  const response = await axiosInstance.get('/api/bookings/schedule', { params: { date } });
+  return getData(response) ?? [];
+};
+
+/** Create a new booking request (Teacher only) */
+export const createBooking = async (data) => {
+  const response = await axiosInstance.post('/api/bookings', data);
   return getData(response);
 };
 
-export const reviewBooking = async (id, data, { userRole = 'ADMIN', reviewerUserId } = {}) => {
-  const response = await axiosInstance.put(`/api/bookings/${id}/review`, data, {
-    params: {
-      userRole,
-      ...(reviewerUserId ? { reviewerUserId } : {})
-    }
-  });
+/** Approve or Reject a booking (Admin only) */
+export const reviewBooking = async (id, data) => {
+  const response = await axiosInstance.put(`/api/bookings/${id}/review`, data);
   return getData(response);
 };
 
-export const cancelBooking = async (id, { userId, userRole } = {}) => {
-  const response = await axiosInstance.put(`/api/bookings/${id}/cancel`, null, {
-    params: {
-      ...(userId ? { userId } : {}),
-      ...(userRole ? { userRole } : {})
-    }
-  });
+/** Cancel an approved booking */
+export const cancelBooking = async (id) => {
+  const response = await axiosInstance.put(`/api/bookings/${id}/cancel`, null);
   return getData(response);
 };
 
 const bookingService = {
   getMyBookings,
   getAllBookings,
+  getDailySchedule,
   createBooking,
   reviewBooking,
   cancelBooking
