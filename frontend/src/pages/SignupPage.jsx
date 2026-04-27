@@ -28,25 +28,41 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') return;
-    if (!window.google || !buttonRef.current || isAuthenticated || googleInitializedRef.current) return;
+    if (isAuthenticated || googleInitializedRef.current) return;
 
-    const handleGoogleResponse = async (response) => {
-      setIsLoading(true);
-      try {
-        const res = await authApi.googleAuth(response.credential);
-        login(res.data.data.token);
-        toast.success('Signed in with Google!');
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Google registration failed');
-      } finally {
-        setIsLoading(false);
-      }
+    const initializeGoogle = () => {
+      if (!window.google || !buttonRef.current || googleInitializedRef.current) return;
+
+      const handleGoogleResponse = async (response) => {
+        setIsLoading(true);
+        try {
+          const res = await authApi.googleAuth(response.credential);
+          login(res.data.data.token);
+          toast.success('Signed in with Google!');
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Google registration failed');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+      const width = Math.max(240, Math.min(buttonRef.current.offsetWidth || 320, 400));
+      window.google.accounts.id.renderButton(buttonRef.current, { theme: 'outline', size: 'large', width });
+      googleInitializedRef.current = true;
     };
 
-    window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
-    const width = Math.max(240, Math.min(buttonRef.current.offsetWidth || 320, 400));
-    window.google.accounts.id.renderButton(buttonRef.current, { theme: 'outline', size: 'large', width });
-    googleInitializedRef.current = true;
+    if (window.google) {
+      initializeGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google) {
+          clearInterval(timer);
+          initializeGoogle();
+        }
+      }, 100);
+      return () => clearInterval(timer);
+    }
   }, [login, isAuthenticated]);
 
   const handleSignup = async (e) => {
