@@ -12,9 +12,6 @@ export default function TicketListPage() {
   const isAdminOrTech = user?.role === 'ADMIN' || user?.role === 'TECHNICIAN';
   const isTech = user?.role === 'TECHNICIAN';
 
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -29,6 +26,10 @@ export default function TicketListPage() {
       setIsLoading(false);
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const getStatusColor = (status) => {
     switch (status) {

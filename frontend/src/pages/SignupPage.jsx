@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+
+const GOOGLE_CLIENT_ID =
+  process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+  '507530006213-9ae1s1a9t8pi4lfsqi5r6u8gstaq6qgq.apps.googleusercontent.com';
 
 const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8888';
 
 export default function SignupPage() {
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const buttonRef = useRef(null);
+  const googleInitializedRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +22,33 @@ export default function SignupPage() {
     password: '',
     confirmPassword: ''
   });
+
+  useEffect(() => {
+    if (isAuthenticated) navigate('/resources', { replace: true });
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') return;
+    if (!window.google || !buttonRef.current || isAuthenticated || googleInitializedRef.current) return;
+
+    const handleGoogleResponse = async (response) => {
+      setIsLoading(true);
+      try {
+        const res = await axios.post(`${API_URL}/api/auth/google`, { idToken: response.credential });
+        login(res.data.data.token);
+        toast.success('Signed in with Google!');
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Google registration failed');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+    const width = Math.max(240, Math.min(buttonRef.current.offsetWidth || 320, 400));
+    window.google.accounts.id.renderButton(buttonRef.current, { theme: 'outline', size: 'large', width });
+    googleInitializedRef.current = true;
+  }, [login, isAuthenticated]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -103,6 +138,13 @@ export default function SignupPage() {
               {isLoading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+            <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-slate-500">Or continue with</span></div>
+          </div>
+
+          <div ref={buttonRef} className="w-full" />
 
           <div className="text-center mt-6">
             <p className="text-sm text-slate-600">

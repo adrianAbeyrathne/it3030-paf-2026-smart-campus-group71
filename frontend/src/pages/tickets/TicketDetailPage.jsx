@@ -19,12 +19,6 @@ export default function TicketDetailPage() {
   const isAdminOrTech = user?.role === 'ADMIN' || user?.role === 'TECHNICIAN';
   const isAdmin = user?.role === 'ADMIN';
 
-  useEffect(() => {
-    fetchData();
-    if (isAdmin) {
-      fetchTechnicians();
-    }
-  }, [fetchData, fetchTechnicians, isAdmin]);
 
   const fetchTechnicians = useCallback(async () => {
     try {
@@ -50,6 +44,13 @@ export default function TicketDetailPage() {
       setIsLoading(false);
     }
   }, [id, navigate]);
+
+  useEffect(() => {
+    fetchData();
+    if (isAdmin) {
+      fetchTechnicians();
+    }
+  }, [fetchData, fetchTechnicians, isAdmin]);
 
   const handleStatusUpdate = async (newStatus, notes = '') => {
     setIsActionLoading(true);
