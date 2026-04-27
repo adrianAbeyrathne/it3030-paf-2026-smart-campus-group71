@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import TicketService from '../../services/TicketService';
@@ -24,18 +24,18 @@ export default function TicketDetailPage() {
     if (isAdmin) {
       fetchTechnicians();
     }
-  }, [id, isAdmin]);
+  }, [fetchData, fetchTechnicians, isAdmin]);
 
-  const fetchTechnicians = async () => {
+  const fetchTechnicians = useCallback(async () => {
     try {
       const data = await userService.getUsersByRole('TECHNICIAN');
       setTechnicians(data);
     } catch (err) {
       console.error('Failed to load technicians');
     }
-  };
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [ticketRes, commentsRes] = await Promise.all([
         TicketService.getTicketById(id),
@@ -49,7 +49,7 @@ export default function TicketDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, navigate]);
 
   const handleStatusUpdate = async (newStatus, notes = '') => {
     setIsActionLoading(true);

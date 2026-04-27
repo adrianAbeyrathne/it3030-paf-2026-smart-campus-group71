@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import TicketService from '../../services/TicketService';
@@ -14,9 +14,9 @@ export default function TicketListPage() {
 
   useEffect(() => {
     fetchTickets();
-  }, [activeTab]);
+  }, [fetchTickets]);
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = activeTab === 'assigned' 
@@ -28,7 +28,7 @@ export default function TicketListPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab]);
 
   const getStatusColor = (status) => {
     switch (status) {
