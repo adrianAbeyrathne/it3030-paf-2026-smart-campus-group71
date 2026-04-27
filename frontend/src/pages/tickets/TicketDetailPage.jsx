@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import TicketService from '../../services/TicketService';
-import userService from '../../services/userService';
+import ticketApi from '../../api/ticketApi';
+import userApi from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TicketDetailPage() {
@@ -22,7 +22,7 @@ export default function TicketDetailPage() {
 
   const fetchTechnicians = useCallback(async () => {
     try {
-      const data = await userService.getUsersByRole('TECHNICIAN');
+      const data = await userApi.getUsersByRole('TECHNICIAN');
       setTechnicians(data);
     } catch (err) {
       console.error('Failed to load technicians');
@@ -32,8 +32,8 @@ export default function TicketDetailPage() {
   const fetchData = useCallback(async () => {
     try {
       const [ticketRes, commentsRes] = await Promise.all([
-        TicketService.getTicketById(id),
-        TicketService.getComments(id)
+        ticketApi.getTicketById(id),
+        ticketApi.getComments(id)
       ]);
       setTicket(ticketRes.data.data);
       setComments(commentsRes.data.data);
@@ -55,7 +55,7 @@ export default function TicketDetailPage() {
   const handleStatusUpdate = async (newStatus, notes = '') => {
     setIsActionLoading(true);
     try {
-      await TicketService.updateStatus(id, { status: newStatus, resolutionNotes: notes });
+      await ticketApi.updateStatus(id, { status: newStatus, resolutionNotes: notes });
       toast.success(`Status updated to ${newStatus}`);
       fetchData();
     } catch (err) {
@@ -69,7 +69,7 @@ export default function TicketDetailPage() {
     if (!techId) return;
     setIsActionLoading(true);
     try {
-      await TicketService.updateStatus(id, { assignedToId: techId });
+      await ticketApi.updateStatus(id, { assignedToId: techId });
       toast.success('Technician assigned successfully');
       fetchData();
     } catch (err) {
@@ -84,9 +84,9 @@ export default function TicketDetailPage() {
     if (!newComment.trim()) return;
 
     try {
-      await TicketService.addComment(id, newComment);
+      await ticketApi.addComment(id, newComment);
       setNewComment('');
-      const res = await TicketService.getComments(id);
+      const res = await ticketApi.getComments(id);
       setComments(res.data.data);
     } catch (err) {
       toast.error('Failed to add comment');

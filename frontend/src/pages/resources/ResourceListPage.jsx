@@ -5,7 +5,7 @@ import ResourceCard from '../../components/resources/ResourceCard';
 import ResourceFilter from '../../components/resources/ResourceFilter';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import resourceService from '../../services/resourceService';
+import resourceApi from '../../api/resourceApi';
 
 const TYPE_OPTIONS = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
 const STATUS_OPTIONS = ['ACTIVE', 'OUT_OF_SERVICE'];
@@ -34,7 +34,7 @@ function ResourceListPage() {
     const loadResources = async () => {
       try {
         setIsLoading(true);
-        const results = await resourceService.searchResources({
+        const results = await resourceApi.searchResources({
           search: filters.search,
           type: filters.type,
           status: filters.status,

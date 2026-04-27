@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import TicketService from '../../services/TicketService';
+import ticketApi from '../../api/ticketApi';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TicketListPage() {
@@ -17,8 +17,8 @@ export default function TicketListPage() {
     try {
       setIsLoading(true);
       const res = activeTab === 'assigned' 
-        ? await TicketService.getAssignedTickets()
-        : await TicketService.getTickets();
+        ? await ticketApi.getAssignedTickets()
+        : await ticketApi.getTickets();
       setTickets(res.data.data);
     } catch (err) {
       toast.error('Failed to load tickets');

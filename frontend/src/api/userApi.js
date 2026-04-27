@@ -28,11 +28,11 @@ export const getUsersByRole = async (role) => {
   return getData(response) ?? [];
 };
 
-const userService = {
+const userApi = {
   getAllUsers,
   getMyProfile,
   updateUserRole,
   getUsersByRole
 };
 
-export default userService;
+export default userApi;

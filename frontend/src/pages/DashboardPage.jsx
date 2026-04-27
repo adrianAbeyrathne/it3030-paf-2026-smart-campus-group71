@@ -12,11 +12,11 @@ import {
 } from 'recharts';
 import StatCard from '../components/dashboard/StatCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import resourceService from '../services/resourceService';
-import notificationService from '../services/notificationService';
-import statsService from '../services/statsService';
-import TicketService from '../services/TicketService';
-import bookingService from '../services/bookingService';
+import resourceApi from '../api/resourceApi';
+import notificationApi from '../api/notificationApi';
+import statsApi from '../api/statsApi';
+import ticketApi from '../api/ticketApi';
+import bookingApi from '../api/bookingApi';
 import { useAuth } from '../context/AuthContext';
 
 const formatLabel = (value) =>
@@ -66,10 +66,10 @@ function DashboardPage() {
       try {
         setIsLoading(true);
         const [statsResult, resourcesResult, unreadResult, ticketsResult] = await Promise.all([
-          statsService.getResourceStats(),
-          resourceService.getAllResources(),
-          notificationService.getUnreadCount(),
-          TicketService.getTickets()
+          statsApi.getResourceStats(),
+          resourceApi.getAllResources(),
+          notificationApi.getUnreadCount(),
+          ticketApi.getTickets()
         ]);
 
         setStats(statsResult);
@@ -91,7 +91,7 @@ function DashboardPage() {
       if (!isAdmin()) return;
       try {
         setIsScheduleLoading(true);
-        const data = await bookingService.getDailySchedule(scheduleDate);
+        const data = await bookingApi.getDailySchedule(scheduleDate);
         setDailySchedule(data);
       } catch (error) {
         toast.error('Failed to fetch schedule for selected date');

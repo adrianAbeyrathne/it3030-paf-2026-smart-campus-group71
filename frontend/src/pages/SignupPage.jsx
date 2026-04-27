@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import authApi from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID =
   process.env.REACT_APP_GOOGLE_CLIENT_ID ||
   '507530006213-9ae1s1a9t8pi4lfsqi5r6u8gstaq6qgq.apps.googleusercontent.com';
 
-const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8888';
 
 export default function SignupPage() {
   const { login, isAuthenticated } = useAuth();
@@ -34,7 +33,7 @@ export default function SignupPage() {
     const handleGoogleResponse = async (response) => {
       setIsLoading(true);
       try {
-        const res = await axios.post(`${API_URL}/api/auth/google`, { idToken: response.credential });
+        const res = await authApi.googleAuth(response.credential);
         login(res.data.data.token);
         toast.success('Signed in with Google!');
       } catch (err) {
@@ -59,11 +58,7 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      await axios.post(`${API_URL}/api/auth/signup`, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
-      });
+      await authApi.signup(formData.name, formData.email, formData.password);
       toast.success('Account created! Please log in.');
       navigate('/login');
     } catch (err) {

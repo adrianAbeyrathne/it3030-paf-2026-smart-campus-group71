@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ResourceForm from '../../components/resources/ResourceForm';
-import resourceService from '../../services/resourceService';
+import resourceApi from '../../api/resourceApi';
 
 const TYPE_OPTIONS = ['STUDIES', 'LAB_WORK', 'COMPUTER_LAB', 'PRESENTATION', 'LECTURE_HALL'];
 const STATUS_OPTIONS = ['ACTIVE', 'NOT_ACTIVE', 'OUT_OF_SERVICE'];
@@ -25,7 +25,7 @@ function ResourceFormPage() {
     const fetchResource = async () => {
       try {
         setIsLoading(true);
-        const data = await resourceService.getResourceById(id);
+        const data = await resourceApi.getResourceById(id);
         setInitialValues(data);
       } catch {
         toast.error('Failed to load resource for editing');
@@ -42,8 +42,8 @@ function ResourceFormPage() {
     try {
       setIsSubmitting(true);
       const saved = isEditMode
-        ? await resourceService.updateResource(id, payload)
-        : await resourceService.createResource(payload);
+        ? await resourceApi.updateResource(id, payload)
+        : await resourceApi.createResource(payload);
 
       toast.success(isEditMode ? 'Resource updated successfully' : 'Resource created successfully');
       navigate(`/resources/${saved.id}`);

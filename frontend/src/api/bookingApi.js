@@ -47,7 +47,7 @@ export const cancelBooking = async (id) => {
   return getData(response);
 };
 
-const bookingService = {
+const bookingApi = {
   getMyBookings,
   getAllBookings,
   getDailySchedule,
@@ -56,4 +56,4 @@ const bookingService = {
   cancelBooking
 };
 
-export default bookingService;
+export default bookingApi;

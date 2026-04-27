@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
-import { getUnreadCount } from '../services/notificationService';
+import { getUnreadCount } from '../api/notificationApi';
 
 function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

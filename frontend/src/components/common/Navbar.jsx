@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import notificationService from '../../services/notificationService';
+import notificationApi from '../../api/notificationApi';
 
 const navLinkClass = ({ isActive }) =>
   [
@@ -40,7 +40,7 @@ function Navbar() {
     
     const fetchUnreadCount = async () => {
       try {
-        const count = await notificationService.getUnreadCount();
+        const count = await notificationApi.getUnreadCount();
         setUnreadCount(count);
       } catch {
         setUnreadCount(0);

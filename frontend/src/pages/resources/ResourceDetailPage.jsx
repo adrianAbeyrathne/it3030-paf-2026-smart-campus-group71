@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import resourceService from '../../services/resourceService';
+import resourceApi from '../../api/resourceApi';
 
 const formatLabel = (value) =>
   (value || '')
@@ -34,7 +34,7 @@ function ResourceDetailPage() {
     const fetchResource = async () => {
       try {
         setIsLoading(true);
-        const data = await resourceService.getResourceById(id);
+        const data = await resourceApi.getResourceById(id);
         setResource(data);
       } catch {
         toast.error('Failed to load resource details');
@@ -50,7 +50,7 @@ function ResourceDetailPage() {
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await resourceService.deleteResource(id);
+      await resourceApi.deleteResource(id);
       toast.success('Resource deleted successfully');
       navigate('/resources');
     } catch {

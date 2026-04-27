@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import notificationService from '../../services/notificationService';
+import notificationApi from '../../api/notificationApi';
 
 const formatDate = (value) => {
   if (!value) return 'Unknown time';
@@ -35,7 +35,7 @@ function NotificationsPage() {
   const loadNotifications = async () => {
     try {
       setIsLoading(true);
-      const data = await notificationService.getNotifications();
+      const data = await notificationApi.getNotifications();
       setNotifications(data || []);
     } catch {
       toast.error('Failed to load notifications');
@@ -70,7 +70,7 @@ function NotificationsPage() {
 
   const handleMarkAllRead = async () => {
     try {
-      await notificationService.markAllAsRead();
+      await notificationApi.markAllAsRead();
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true, read: true })));
       toast.success('All notifications marked as read');
     } catch {
@@ -80,7 +80,7 @@ function NotificationsPage() {
 
   const handleMarkRead = async (id) => {
     try {
-      await notificationService.markAsRead(id);
+      await notificationApi.markAsRead(id);
       setNotifications((prev) =>
         prev.map((item) => (item.id === id ? { ...item, isRead: true, read: true } : item))
       );
@@ -91,7 +91,7 @@ function NotificationsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await notificationService.deleteNotification(id);
+      await notificationApi.deleteNotification(id);
       setNotifications((prev) => prev.filter((item) => item.id !== id));
       toast.success('Notification deleted');
     } catch {

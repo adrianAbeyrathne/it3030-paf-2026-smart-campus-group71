@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import TicketService from '../../services/TicketService';
+import ticketApi from '../../api/ticketApi';
 
 export default function RaiseTicketPage() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function RaiseTicketPage() {
         data.append('files', file);
       });
 
-      await TicketService.createTicket(data);
+      await ticketApi.createTicket(data);
       toast.success('Ticket raised successfully!');
       navigate('/tickets');
     } catch (err) {

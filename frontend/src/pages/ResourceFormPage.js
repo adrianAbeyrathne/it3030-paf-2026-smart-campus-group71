@@ -7,7 +7,7 @@ import {
   createResource,
   getResourceById,
   updateResource
-} from '../services/resourceService';
+} from '../api/resourceApi';
 import { resourceTypeOptions, statusOptions } from '../utils/resourceUi';
 
 const defaultFormState = {

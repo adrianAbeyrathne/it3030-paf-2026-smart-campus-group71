@@ -7,7 +7,7 @@ import { CalendarIcon, CommentIcon, WrenchIcon } from '../components/icons';
 import {
   getNotifications,
   markAllAsRead
-} from '../services/notificationService';
+} from '../api/notificationApi';
 import { formatTimestamp } from '../utils/dateTime';
 
 const tabs = ['ALL', 'UNREAD'];

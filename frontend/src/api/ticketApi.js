@@ -1,6 +1,6 @@
 import axiosInstance from './axiosInstance';
 
-const TicketService = {
+const ticketApi = {
   createTicket: async (formData) => {
     // formData is a FormData object because of file uploads
     return axiosInstance.post('/api/tickets', formData, {
@@ -39,4 +39,4 @@ const TicketService = {
   }
 };
 
-export default TicketService;
+export default ticketApi;

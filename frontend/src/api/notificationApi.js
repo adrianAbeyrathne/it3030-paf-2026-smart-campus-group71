@@ -31,7 +31,7 @@ export const deleteNotification = async (id) => {
   return getData(response);
 };
 
-const notificationService = {
+const notificationApi = {
   getNotifications,
   getUnreadCount,
   markAsRead,
@@ -39,4 +39,4 @@ const notificationService = {
   deleteNotification
 };
 
-export default notificationService;
+export default notificationApi;

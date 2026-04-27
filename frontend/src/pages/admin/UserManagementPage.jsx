@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import userService from '../../services/userService';
+import userApi from '../../api/userApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const roleStyles = {
@@ -18,7 +18,7 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const data = await userService.getAllUsers();
+      const data = await userApi.getAllUsers();
       setUsers(data);
     } catch (error) {
       toast.error('Failed to load users list');
@@ -33,7 +33,7 @@ export default function UserManagementPage() {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      await userService.updateUserRole(userId, newRole);
+      await userApi.updateUserRole(userId, newRole);
       toast.success(`User role updated to ${newRole}`);
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
     } catch (error) {

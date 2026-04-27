@@ -1,4 +1,4 @@
-import { getAllResources } from './resourceService';
+import { getAllResources } from './resourceApi';
 
 const getResourceStats = async () => {
   const resources = await getAllResources();
@@ -20,8 +20,8 @@ const getResourceStats = async () => {
   };
 };
 
-const statsService = {
+const statsApi = {
   getResourceStats
 };
 
-export default statsService;
+export default statsApi;

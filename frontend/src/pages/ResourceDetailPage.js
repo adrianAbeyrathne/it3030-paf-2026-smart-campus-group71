@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { LocationIcon, UserIcon } from '../components/icons';
-import { deleteResource, getResourceById } from '../services/resourceService';
+import { deleteResource, getResourceById } from '../api/resourceApi';
 import {
   getStatusBadgeClass,
   toResourceTypeLabel,

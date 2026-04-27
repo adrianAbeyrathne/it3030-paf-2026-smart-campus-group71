@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import bookingService from '../../services/bookingService';
-import resourceService from '../../services/resourceService';
+import bookingApi from '../../api/bookingApi';
+import resourceApi from '../../api/resourceApi';
 import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useLocation } from 'react-router-dom';
@@ -44,9 +44,9 @@ export default function BookingManagementPage() {
 
       const [bookingsData, resourcesData] = await Promise.all([
         isAdmin()
-          ? bookingService.getAllBookings()
-          : bookingService.getMyBookings(),
-        resourceService.getAllResources({ status: 'ACTIVE' })
+          ? bookingApi.getAllBookings()
+          : bookingApi.getMyBookings(),
+        resourceApi.getAllResources({ status: 'ACTIVE' })
       ]);
 
       setBookings(bookingsData || []);
@@ -75,7 +75,7 @@ export default function BookingManagementPage() {
       try {
         setIsCheckingAvailability(true);
 
-        const response = await bookingService.getDailySchedule(
+        const response = await bookingApi.getDailySchedule(
           formData.bookingDate
         );
 
@@ -103,7 +103,7 @@ export default function BookingManagementPage() {
     setIsSubmitting(true);
 
     try {
-      await bookingService.createBooking({
+      await bookingApi.createBooking({
         ...formData,
         expectedAttendees: Number(formData.expectedAttendees) || 1
       });
@@ -139,7 +139,7 @@ export default function BookingManagementPage() {
     }
 
     try {
-      await bookingService.reviewBooking(id, { status, reason });
+      await bookingApi.reviewBooking(id, { status, reason });
       toast.success(`Booking ${status.toLowerCase()}`);
       fetchData();
     } catch (error) {

@@ -50,7 +50,7 @@ export const searchResources = async (filters = {}) => {
   });
 };
 
-const resourceService = {
+const resourceApi = {
   getAllResources,
   getResourceById,
   createResource,
@@ -59,4 +59,4 @@ const resourceService = {
   searchResources
 };
 
-export default resourceService;
+export default resourceApi;
