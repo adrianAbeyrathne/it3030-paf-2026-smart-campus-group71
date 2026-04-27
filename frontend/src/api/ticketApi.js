@@ -22,6 +22,18 @@ const ticketApi = {
     return axiosInstance.get(`/api/tickets/${id}`);
   },
 
+  updateTicket: async (id, formData) => {
+    return axiosInstance.put(`/api/tickets/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  deleteTicket: async (id) => {
+    return axiosInstance.delete(`/api/tickets/${id}`);
+  },
+
   updateStatus: async (id, data) => {
     return axiosInstance.patch(`/api/tickets/${id}/status`, data);
   },

@@ -67,6 +67,57 @@ public class IncidentTicketService {
         return mapToResponse(saved);
     }
 
+    public TicketResponseDTO updateTicket(String ticketId, String reporterId, TicketRequestDTO dto, List<MultipartFile> files) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+
+        if (!ticket.getReporterId().equals(reporterId)) {
+            throw new RuntimeException("Unauthorized to update this ticket");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN || ticket.getAssignedToId() != null) {
+            throw new RuntimeException("Cannot update ticket that is already assigned or not OPEN");
+        }
+
+        ticket.setTitle(dto.getTitle());
+        ticket.setDescription(dto.getDescription());
+        ticket.setCategory(dto.getCategory());
+        ticket.setPriority(dto.getPriority());
+        ticket.setResourceId(dto.getResourceId());
+        ticket.setLocation(dto.getLocation());
+        ticket.setContactDetails(dto.getContactDetails());
+
+        if (files != null && !files.isEmpty()) {
+            // Option to replace or just add images, let's just add for now up to 3
+            for (MultipartFile file : files) {
+                if (ticket.getImages().size() < 3) {
+                    String filename = fileStorageService.store(file);
+                    ticket.getImages().add(filename);
+                }
+            }
+        }
+
+        IncidentTicket updated = ticketRepository.save(ticket);
+        return mapToResponse(updated);
+    }
+
+    public void deleteTicket(String ticketId, String reporterId) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+
+        if (!ticket.getReporterId().equals(reporterId)) {
+            throw new RuntimeException("Unauthorized to delete this ticket");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN || ticket.getAssignedToId() != null) {
+            throw new RuntimeException("Cannot delete ticket that is already assigned or not OPEN");
+        }
+
+        // Also delete comments
+        List<TicketComment> comments = commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId);
+        commentRepository.deleteAll(comments);
+
+        ticketRepository.delete(ticket);
+    }
+
     public List<TicketResponseDTO> getAllTickets() {
         return ticketRepository.findAll().stream()
                 .map(this::mapToResponse)

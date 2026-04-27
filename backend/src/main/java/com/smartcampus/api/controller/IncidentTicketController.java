@@ -31,6 +31,25 @@ public class IncidentTicketController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ticket created successfully", response));
     }
 
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<TicketResponseDTO>> updateTicket(
+            Authentication auth,
+            @PathVariable String id,
+            @RequestPart("data") @Valid TicketRequestDTO dto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        
+        String userId = (String) auth.getPrincipal();
+        TicketResponseDTO response = ticketService.updateTicket(id, userId, dto, files);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ticket updated successfully", response));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteTicket(Authentication auth, @PathVariable String id) {
+        String userId = (String) auth.getPrincipal();
+        ticketService.deleteTicket(id, userId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ticket deleted successfully", null));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<TicketResponseDTO>>> getTickets(Authentication auth) {
         String userId = (String) auth.getPrincipal();
