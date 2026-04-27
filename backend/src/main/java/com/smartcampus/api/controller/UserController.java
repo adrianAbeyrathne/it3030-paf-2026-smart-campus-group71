@@ -59,6 +59,12 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Role updated to " + dto.getRole(), updated));
     }
 
+    @GetMapping("/role/{role}")
+    public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getUsersByRole(
+            @PathVariable UserRole role, Authentication auth) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched", userService.getUsersByRole(role)));
+    }
+
     /** GET /api/users/me – returns the currently logged-in user's profile */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getCurrentUser(Authentication auth) {

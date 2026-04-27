@@ -15,6 +15,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import resourceService from '../services/resourceService';
 import notificationService from '../services/notificationService';
 import statsService from '../services/statsService';
+import TicketService from '../services/TicketService';
 
 const formatLabel = (value) =>
   value
@@ -43,21 +44,24 @@ function DashboardPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, outOfService: 0, byType: {} });
   const [unreadCount, setUnreadCount] = useState(0);
   const [resources, setResources] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         setIsLoading(true);
-        const [statsResult, resourcesResult, unreadResult] = await Promise.all([
+        const [statsResult, resourcesResult, unreadResult, ticketsResult] = await Promise.all([
           statsService.getResourceStats(),
           resourceService.getAllResources(),
-          notificationService.getUnreadCount()
+          notificationService.getUnreadCount(),
+          TicketService.getTickets()
         ]);
 
         setStats(statsResult);
         setResources(resourcesResult || []);
         setUnreadCount(unreadResult);
+        setTickets(ticketsResult.data.data || []);
       } catch {
         toast.error('Failed to load dashboard analytics');
       } finally {
@@ -167,6 +171,50 @@ function DashboardPage() {
                 <tr>
                   <td colSpan="4" className="px-3 py-5 text-center text-slate-500">
                     No resources available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Recent Incident Tickets</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-slate-600">
+              <tr>
+                <th className="px-3 py-2 font-medium">Issue</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 font-medium">Priority</th>
+                <th className="px-3 py-2 font-medium">Reporter</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {tickets.slice(0, 5).length > 0 ? (
+                tickets.slice(0, 5).map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td className="px-3 py-2 font-medium text-slate-800">
+                      <Link to={`/tickets/${ticket.id}`} className="hover:text-blue-600">
+                        {ticket.title}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="text-xs font-bold uppercase">{ticket.status}</span>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`text-xs font-bold ${ticket.priority === 'URGENT' ? 'text-rose-600' : 'text-slate-600'}`}>
+                        {ticket.priority}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">{ticket.reporterName}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="px-3 py-5 text-center text-slate-500">
+                    No tickets reported yet.
                   </td>
                 </tr>
               )}

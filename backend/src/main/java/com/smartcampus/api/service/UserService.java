@@ -4,10 +4,12 @@ import com.smartcampus.api.dto.UserResponseDTO;
 import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.model.User;
 import com.smartcampus.api.model.enums.AuthProvider;
+import com.smartcampus.api.model.enums.NotificationType;
 import com.smartcampus.api.model.enums.UserRole;
 import com.smartcampus.api.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +21,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, @Lazy NotificationService notificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -90,8 +94,27 @@ public class UserService {
     public UserResponseDTO updateUserRole(String id, UserRole role) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        
+        UserRole oldRole = user.getRole();
         user.setRole(role);
-        return mapToResponse(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+
+        // Send notification to the user
+        notificationService.createNotification(
+            id,
+            NotificationType.ROLE_CHANGED,
+            "Role Updated",
+            "Your account role has been changed from " + oldRole + " to " + role,
+            null
+        );
+
+        return mapToResponse(savedUser);
+    }
+
+    public List<UserResponseDTO> getUsersByRole(UserRole role) {
+        return userRepository.findByRole(role).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -4,5 +4,9 @@ public enum ResourceType {
     LECTURE_HALL,
     LAB,
     MEETING_ROOM,
-    EQUIPMENT
+    EQUIPMENT,
+    COMPUTER_LAB,
+    LAB_WORK,
+    PRESENTATION,
+    STUDIES
 }

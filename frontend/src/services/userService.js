@@ -17,16 +17,22 @@ export const getMyProfile = async () => {
   return getData(response);
 };
 
-/** Update a user's role (Admin only) */
 export const updateUserRole = async (userId, role) => {
   const response = await axiosInstance.put(`/api/users/${userId}/role`, { role });
   return getData(response);
 };
 
+/** Get users by role (e.g. TECHNICIAN) */
+export const getUsersByRole = async (role) => {
+  const response = await axiosInstance.get(`/api/users/role/${role}`);
+  return getData(response) ?? [];
+};
+
 const userService = {
   getAllUsers,
   getMyProfile,
-  updateUserRole
+  updateUserRole,
+  getUsersByRole
 };
 
 export default userService;

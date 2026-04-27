@@ -81,6 +81,9 @@ function Navbar() {
             <NavLink to="/notifications" className={navLinkClass}>
               Notifications
             </NavLink>
+            <NavLink to="/tickets" className={navLinkClass}>
+              Tickets
+            </NavLink>
           </nav>
         </div>
 
@@ -136,6 +139,9 @@ function Navbar() {
           </NavLink>
           <NavLink to="/notifications" className={navLinkClass}>
             Alerts
+          </NavLink>
+          <NavLink to="/tickets" className={navLinkClass}>
+            Tickets
           </NavLink>
         </nav>
       </div>

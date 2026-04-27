@@ -40,8 +40,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Health check is public
                         .requestMatchers("/api/health/**").permitAll()
-                        // Resource browsing (GET) is public so non-logged-in users can see resources
+                        // Uploaded images are public
+                        .requestMatchers("/uploads/**").permitAll()
+                        // Resource browsing (GET) is public
                         .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
+                        // Tickets and Notifications require authentication
+                        .requestMatchers("/api/tickets/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
                         // All other requests require a valid JWT
                         .anyRequest().authenticated()
                 )

@@ -10,6 +10,9 @@ import BookingManagementPage from './pages/bookings/BookingManagementPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
+import RaiseTicketPage from './pages/tickets/RaiseTicketPage';
+import TicketListPage from './pages/tickets/TicketListPage';
+import TicketDetailPage from './pages/tickets/TicketDetailPage';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -81,6 +84,11 @@ function App() {
 
           <Route path="/bookings" element={<BookingManagementPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+
+          {/* Module C - Tickets */}
+          <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/tickets/raise" element={<RaiseTicketPage />} />
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
