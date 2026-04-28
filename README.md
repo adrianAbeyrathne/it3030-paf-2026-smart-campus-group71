@@ -193,13 +193,13 @@ Base URL: `http://localhost:8888`
 
 ## 👥 Team Contribution
 
-**Member 1: [Your Name]**
+**Member 1: ABEYRATHNE A M D A**
 - Module A: Facilities & Assets Catalogue
 - Module D: Notifications
 - Module E: Role-based access control
 - Frontend: Resource pages, Dashboard, Notifications
 
-**Member 2: [Partner Name]**
+**Member 2: ATHUKORALA K A K S**
 - Module B: Booking Management
 - Module C: Maintenance & Incident Ticketing
 - Module E: OAuth 2.0 + JWT authentication
@@ -213,13 +213,6 @@ The project uses **GitHub Actions** for continuous integration. The workflow aut
 
 Workflow configuration can be found in `.github/workflows/ci.yml`.
 
-## 📸 Screenshots
-*(Add your screenshots here)*
-1. Dashboard
-2. Resource List
-3. Create Booking
-4. Ticket Details
-5. Notifications
 
 ## 🐛 Troubleshooting
 - **Backend won't start:** Ensure JDK 21 is installed (`java -version`). Check if port 8888 is already in use.
@@ -230,8 +223,8 @@ Workflow configuration can be found in `.github/workflows/ci.yml`.
 This project is developed for educational purposes as part of the **IT3030 - Programming Applications and Frameworks** course at SLIIT.
 
 ## 📧 Contact
-- **Member 1:** [Your Email]
-- **Member 2:** [Partner Email]
+- **Member 1: **it23679962@my.sliit.lk**
+- **Member 2: **it23664562@my.sliit.lk**
 
 ---
-**Developed with ❤️ by Group 71 - SLIIT Faculty of Computing**
+**Maintained with diligence by Group 71 - SLIIT Faculty of Computing**
